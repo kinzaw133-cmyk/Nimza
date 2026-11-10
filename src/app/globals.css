@@ -1,8 +1,123 @@
-@tailwind base;@tailwind components;@tailwind utilities;
-html{scroll-behavior:smooth}body{background:#F7F4EC;color:#24241F;font-family:var(--font-dm),sans-serif}
-.glass{background:rgba(247,244,236,.14);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(247,244,236,.32);box-shadow:0 20px 60px rgba(36,36,31,.3)}
-.btn{@apply inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 font-bold text-charcoal transition hover:shadow-lg hover:shadow-gold/40 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive}
-.btn-o{@apply inline-flex items-center gap-2 rounded-full border border-ivory/70 px-6 py-3 font-medium text-ivory transition hover:bg-ivory/10}
-.btn-d{@apply inline-flex items-center gap-2 rounded-full bg-olive px-5 py-2.5 font-bold text-gold transition hover:opacity-90}
-.inp{@apply w-full rounded-xl border border-sand bg-white px-4 py-3 outline-none focus:border-olive focus:ring-2 focus:ring-gold}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+  body {
+    background-color: #F7F4EC;
+    color: #24241F;
+    font-family: var(--font-dm), "DM Sans", system-ui, sans-serif;
+    overflow-x: hidden;
+    selection-background-color: #B99A5B;
+    selection-color: #1F2615;
+  }
+
+  ::selection {
+    background-color: #B99A5B;
+    color: #1F2615;
+  }
+
+  /* Custom Luxury Scrollbar */
+  ::-webkit-scrollbar {
+    width: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1F2615;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #B99A5B;
+    border-radius: 9999px;
+    border: 2px solid #1F2615;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D8BF83;
+  }
+}
+
+/* Glassmorphism & Luxury Cards */
+.glass {
+  background: rgba(247, 244, 236, 0.16);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(247, 244, 236, 0.35);
+  box-shadow: 0 20px 60px rgba(24, 28, 18, 0.35);
+}
+
+.glass-dark {
+  background: rgba(23, 29, 15, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(185, 154, 91, 0.25);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.glass-gold {
+  background: linear-gradient(135deg, rgba(185, 154, 91, 0.12) 0%, rgba(247, 244, 236, 0.08) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(185, 154, 91, 0.35);
+}
+
+/* Gold Gradient Text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #B99A5B 0%, #F3E5C2 50%, #A88647 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gold-foil {
+  background: linear-gradient(90deg, #B99A5B, #F3E5C2, #B99A5B);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Luxury Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold px-7 py-3.5 font-bold tracking-wide text-charcoal transition-all duration-300 hover:bg-gold-light hover:shadow-lg hover:shadow-gold/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive;
+}
+
+.btn-o {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border border-ivory/80 px-7 py-3.5 font-medium tracking-wide text-ivory transition-all duration-300 hover:bg-ivory hover:text-olive hover:shadow-lg hover:shadow-ivory/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+}
+
+.btn-d {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-olive px-6 py-3 font-bold tracking-wide text-gold transition-all duration-300 hover:bg-olive-dark hover:text-gold-light hover:shadow-lg hover:shadow-olive/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+}
+
+.btn-gold-outline {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border border-gold/70 px-6 py-3 font-semibold tracking-wide text-gold transition-all duration-300 hover:bg-gold hover:text-charcoal hover:shadow-lg hover:shadow-gold/30 hover:-translate-y-0.5 active:scale-95;
+}
+
+/* Luxury Input Field */
+.inp {
+  @apply w-full rounded-2xl border border-sand bg-white/90 px-4 py-3.5 text-charcoal outline-none transition-all duration-300 placeholder:text-charcoal/40 hover:border-gold/60 focus:border-gold focus:bg-white focus:ring-2 focus:ring-gold/30;
+}
+
+.inp-dark {
+  @apply w-full rounded-2xl border border-gold/30 bg-olive-deep/70 px-4 py-3.5 text-ivory outline-none transition-all duration-300 placeholder:text-sand/50 hover:border-gold/70 focus:border-gold focus:bg-olive-deep focus:ring-2 focus:ring-gold/30;
+}
+
+/* Gold Glow Utility */
+.glow-gold {
+  box-shadow: 0 0 35px rgba(185, 154, 91, 0.28);
+}
+
+.border-gold-glow {
+  border-color: rgba(185, 154, 91, 0.4);
+  box-shadow: 0 0 20px rgba(185, 154, 91, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

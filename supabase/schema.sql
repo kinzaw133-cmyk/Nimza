@@ -16,6 +16,8 @@ create policy oi1 on order_items for select using(exists(select 1 from orders o 
 create policy oi2 on order_items for insert with check(exists(select 1 from orders o where o.id=order_id and o.user_id=auth.uid()));
 create policy r1 on reservations for select using(user_id=auth.uid() or is_admin());create policy r2 on reservations for insert with check(user_id=auth.uid());
 alter publication supabase_realtime add table orders;
+alter publication supabase_realtime add table reservations;
+alter publication supabase_realtime add table menu_items;
 insert into categories(name) values('Starters'),('Mains'),('Desserts'),('Drinks');
 insert into menu_items(category_id,name,description,price,image_url,badge) select c.id,v.n,v.d,v.p,v.i,v.b from (values
 ('Starters','Garden Bowl','Seasonal leaves, herbs and citrus dressing.',11,'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',null),
