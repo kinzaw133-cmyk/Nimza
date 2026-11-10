@@ -1,0 +1,13 @@
+"use client";
+import Link from "next/link";import { useEffect,useState } from "react";import { motion } from "framer-motion";import { ArrowRight } from "lucide-react";
+import HeroSlider from "@/components/HeroSlider";import Img from "@/components/Img";import { supabase } from "@/lib/supabase";
+const R=({children,d=0}:any)=><motion.div initial={{opacity:0,y:50}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:"-80px"}} transition={{duration:.9,delay:d,ease:[.22,1,.36,1]}}>{children}</motion.div>;
+export default function Home(){const [f,setF]=useState<any[]>([]);useEffect(()=>{supabase.from("menu_items").select("*").order("id").limit(3).then(({data})=>setF(data||[]))},[]);
+ return(<main><HeroSlider/>
+ <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-28 md:grid-cols-2"><R><h2 className="font-serif text-5xl text-olive md:text-6xl">Our philosophy</h2><p className="mt-6 max-w-md leading-relaxed text-charcoal/80">We cook with patience and serve without noise. Every plate is a small argument that simple things, done with care, are enough.</p></R>
+ <R d={.2}><Img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1000&q=80" alt="Nimza dining room" className="h-[480px] w-full rounded-t-[12rem] rounded-b-3xl"/></R></section>
+ <section className="bg-olive px-6 py-24"><div className="mx-auto max-w-6xl"><R><h2 className="font-serif text-5xl text-ivory md:text-6xl">Signature collection</h2></R>
+ <div className="mt-10 grid gap-6 md:grid-cols-3">{f.map((i,n)=><R key={i.id} d={n*.15}><div className={`group overflow-hidden bg-ivory ${n===1?"rounded-[2.5rem] md:mt-10":"rounded-3xl"}`}><Img src={i.image_url} alt={i.name} className="h-60 w-full transition duration-700 group-hover:scale-110"/><div className="p-5"><h3 className="font-serif text-2xl text-olive">{i.name}</h3><p className="mt-1 text-sm">{i.description}</p><p className="mt-3 font-serif text-2xl">${Number(i.price).toFixed(2)}</p></div></div></R>)}</div>
+ <Link href="/menu" className="btn mt-10">See full menu <ArrowRight/></Link></div></section>
+ <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-28 md:grid-cols-2"><R><Img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=1000&q=80" alt="Chef Elias Varga" className="h-[460px] w-full rounded-3xl"/></R>
+ <R d={.2}><h2 className="font-serif text-5xl text-olive">Meet the chef</h2><p className="mt-5 max-w-md leading-relaxed">Chef Elias Varga trained across Budapest, Lyon and Milan. His signature Truffle Tagliatelle is cooked to order, never held.</p><Link href="/reservations" className="btn-d mt-6">Reserve a table</Link></R></section></main>)}

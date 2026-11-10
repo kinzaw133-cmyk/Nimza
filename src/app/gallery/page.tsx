@@ -1,0 +1,3 @@
+export const metadata={title:"Gallery | Nimza Restaurant"};
+const G=["photo-1517248135467-4c7edcad34c4","photo-1514933651103-005eec06c04b","photo-1555396273-367ea4eb4db5","photo-1473093295043-cdd812d0e601","photo-1544025162-d76694265947","photo-1571877227200-a0d98ea607e9"];
+export default function Gallery(){return(<main className="mx-auto min-h-screen max-w-4xl px-6 pb-24 pt-36"><h1 className="font-serif text-5xl text-olive md:text-6xl">Gallery</h1><div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3">{G.map(g=><img key={g} src={`https://images.unsplash.com/${g}?w=900&q=80`} alt="Nimza gallery" loading="lazy" className="mb-4 w-full rounded-2xl object-cover transition duration-500 hover:scale-[1.03]"/>)}</div></main>)}
