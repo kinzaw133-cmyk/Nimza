@@ -5,11 +5,11 @@ module.exports = {
     extend: {
       colors: {
         olive: {
-          DEFAULT: "#343D27",
-          dark: "#1F2615",
-          deep: "#171D0F",
-          light: "#4B5739",
-          muted: "#2C3421",
+          DEFAULT: "#1F241F",
+          dark: "#151915",
+          deep: "#101310",
+          light: "#2C342C",
+          muted: "#181D18",
         },
         gold: {
           DEFAULT: "#B99A5B",
@@ -19,24 +19,24 @@ module.exports = {
           foil: "#C9A765",
         },
         ivory: {
-          DEFAULT: "#F7F4EC",
-          soft: "#FAF8F3",
-          warm: "#EFECE3",
+          DEFAULT: "#FAFAF8",
+          soft: "#FFFFFF",
+          warm: "#F5F4EE",
         },
         charcoal: {
-          DEFAULT: "#24241F",
-          dark: "#171714",
-          soft: "#363630",
+          DEFAULT: "#1F241F",
+          dark: "#121512",
+          soft: "#2E342E",
         },
         sand: {
-          DEFAULT: "#E9DFC9",
-          light: "#F3ECE0",
-          dark: "#D4C7AE",
+          DEFAULT: "#E5E0D8",
+          light: "#EFECE6",
+          dark: "#D6CFC3",
         },
       },
       fontFamily: {
-        serif: ["var(--font-pf)", "Playfair Display", "Georgia", "serif"],
-        sans: ["var(--font-dm)", "DM Sans", "system-ui", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "serif"],
+        sans: ["'DM Sans'", "system-ui", "-apple-system", "sans-serif"],
       },
       animation: {
         "float-slow": "floatSlow 6s ease-in-out infinite",

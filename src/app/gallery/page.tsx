@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Maximize2, Camera } from "lucide-react";
 import Img from "@/components/Img";
+import { preloadImages } from "@/lib/imageCache";
 
 interface GalleryPhoto {
   id: string;
@@ -91,22 +92,27 @@ export default function Gallery() {
   const [selectedCat, setSelectedCat] = useState("all");
   const [activePhoto, setActivePhoto] = useState<GalleryPhoto | null>(null);
 
+  useEffect(() => {
+    preloadImages(PHOTOS.map((p) => p.url), 800);
+  }, []);
+
   const filtered = selectedCat === "all"
     ? PHOTOS
     : PHOTOS.filter((p) => p.category === selectedCat);
 
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
+    <main className="min-h-screen bg-[#FAFAF8] text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-olive mb-3">
-            <Camera size={13} className="text-gold" /> Visual Journey
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Camera size={14} className="text-gold" />
+            <span>Visual Journey</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-olive tracking-tight">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold text-[#1F241F] tracking-tight">
             The Gallery
           </h1>
-          <p className="mt-4 text-charcoal/80 text-base md:text-lg font-light leading-relaxed">
+          <p className="mt-4 text-charcoal/70 text-base md:text-lg font-light leading-relaxed">
             Glimpse into the warmth, flame, and meticulous craft that defines every evening at Nimza.
           </p>
         </div>
@@ -121,8 +127,8 @@ export default function Gallery() {
                 onClick={() => setSelectedCat(cat.id)}
                 className={`rounded-full px-5 py-2 text-xs md:text-sm font-semibold tracking-wide transition-all duration-300 ${
                   isSelected
-                    ? "bg-olive text-gold font-bold shadow-md shadow-olive/30 scale-105"
-                    : "border border-sand bg-white text-charcoal/70 hover:border-gold/50 hover:text-olive"
+                    ? "bg-[#1F241F] text-gold font-bold shadow-md scale-105"
+                    : "border border-sand bg-white text-charcoal/70 hover:border-gold hover:text-[#1F241F] shadow-sm"
                 }`}
               >
                 {cat.label}
@@ -142,7 +148,7 @@ export default function Gallery() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.4 }}
-                className="group relative overflow-hidden rounded-3xl bg-olive-deep shadow-md border border-gold/20 cursor-pointer break-inside-avoid"
+                className="group relative overflow-hidden rounded-3xl bg-[#1F241F] shadow-sm border border-sand/80 hover:border-gold/50 cursor-pointer break-inside-avoid transition-all duration-300"
                 onClick={() => setActivePhoto(photo)}
               >
                 <Img
@@ -184,7 +190,7 @@ export default function Gallery() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative max-w-4xl w-full bg-olive-deep rounded-3xl overflow-hidden border border-gold/40 shadow-2xl"
+              className="relative max-w-4xl w-full bg-[#1F241F] rounded-3xl overflow-hidden border border-gold/40 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -203,7 +209,7 @@ export default function Gallery() {
                 />
               </div>
 
-              <div className="p-6 text-ivory flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-olive-muted">
+              <div className="p-6 text-ivory flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#151915]">
                 <div>
                   <span className="text-[11px] font-bold uppercase tracking-widest text-gold">
                     {activePhoto.category}

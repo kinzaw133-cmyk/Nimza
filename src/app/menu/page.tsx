@@ -1,177 +1,197 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Minus, Search, Star, Sparkles, Filter, Check, ShoppingBag } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Search,
+  Star,
+  Sparkles,
+  Filter,
+  Check,
+  ShoppingBag,
+  Utensils,
+  ChefHat,
+  Leaf,
+  Flame,
+  Clock,
+  ArrowUpDown,
+  XCircle,
+  AlertCircle,
+  SlidersHorizontal,
+  Heart,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useCart } from "@/components/Cart";
+import { useCart, FoodCustomization } from "@/components/Cart";
+import { useWishlist } from "@/components/Wishlist";
+import { useAuth } from "@/lib/useAuth";
 import Img from "@/components/Img";
 import { toast } from "@/lib/notify";
 import { BotanicalLeafSvg } from "@/components/NimzaLogo";
-
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: "Starters" },
-  { id: 2, name: "Mains" },
-  { id: 3, name: "Desserts" },
-  { id: 4, name: "Drinks & Cellar" },
-];
-
-const DEFAULT_ITEMS = [
-  {
-    id: 1,
-    category_id: 1,
-    name: "Garden Harvest Bowl",
-    description: "Seasonal tender leaves, wild herbs, shaved radishes, and cold-pressed citrus dressing.",
-    price: 11.0,
-    image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
-    badge: "Organic",
-    dietary: "Vegan",
-  },
-  {
-    id: 2,
-    category_id: 1,
-    name: "Burrata Pugliese",
-    description: "Creamy artisanal burrata, heirloom confit tomatoes, basil oil, toasted sourdough.",
-    price: 14.0,
-    image_url: "https://images.unsplash.com/photo-1592417817098-8f3d69102a47?w=800&q=80",
-    badge: "Chef's Pick",
-    dietary: "Vegetarian",
-  },
-  {
-    id: 3,
-    category_id: 2,
-    name: "Truffle Tagliatelle",
-    description: "Hand-rolled tagliatelle, black winter truffle emulsion, 36-month aged Parmigiano.",
-    price: 18.0,
-    image_url: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=800&q=80",
-    badge: "Top Pick",
-    dietary: "Hand-Crafted",
-  },
-  {
-    id: 4,
-    category_id: 2,
-    name: "Grilled Ribeye Prime",
-    description: "300g heritage dry-aged beef, bone marrow glaze, roasted heritage carrots, thyme jus.",
-    price: 29.0,
-    image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80",
-    badge: "Wood-Fired",
-    dietary: "Gluten-Free",
-  },
-  {
-    id: 5,
-    category_id: 2,
-    name: "Pan-Seared Herb Salmon",
-    description: "Wild Scottish salmon, champagne beurre blanc, braised fennel, sea greens.",
-    price: 22.0,
-    image_url: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80",
-    badge: "Wild Catch",
-    dietary: "Gluten-Free",
-  },
-  {
-    id: 6,
-    category_id: 2,
-    name: "Wood-Fired Margherita",
-    description: "San Marzano D.O.P. tomatoes, buffalo mozzarella, fresh sweet basil, extra virgin olive oil.",
-    price: 15.0,
-    image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
-    badge: "Classic",
-    dietary: "Vegetarian",
-  },
-  {
-    id: 7,
-    category_id: 3,
-    name: "Tiramisu al Mascarpone",
-    description: "Savoiardi soaked in single-origin espresso, sweet mascarpone foam, Valrhona cocoa.",
-    price: 9.0,
-    image_url: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&q=80",
-    badge: "Chef's Recipe",
-    dietary: "Vegetarian",
-  },
-  {
-    id: 8,
-    category_id: 3,
-    name: "Molten Valrhona Sphere",
-    description: "Warm dark chocolate ganache cake, Madagascar bourbon vanilla ice cream, golden lace.",
-    price: 10.0,
-    image_url: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=800&q=80",
-    badge: "Signature",
-    dietary: "Vegetarian",
-  },
-  {
-    id: 9,
-    category_id: 4,
-    name: "Blood Orange Citrus Spritz",
-    description: "Sicilian blood orange, wild garden rosemary, sparkling mineral water, botanical bitters.",
-    price: 7.0,
-    image_url: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800&q=80",
-    badge: "Zero Proof",
-    dietary: "Vegan",
-  },
-];
+import FoodCustomizationModal from "@/components/FoodCustomizationModal";
+import AiRecommendations from "@/components/AiRecommendations";
+import { useMenuQuery } from "@/lib/queryHooks";
 
 export default function Menu() {
   const { add } = useCart();
-  const [items, setItems] = useState<any[]>(DEFAULT_ITEMS);
-  const [cats, setCats] = useState<any[]>(DEFAULT_CATEGORIES);
+  const { isFavorite, toggleFavorite } = useWishlist();
+  const { isAdmin } = useAuth();
+  const { items, categories: cats, refetch } = useMenuQuery();
   const [selectedCat, setSelectedCat] = useState<number>(0);
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
+  const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "available">("featured");
+  const [customizingDish, setCustomizingDish] = useState<any | null>(null);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
+  const [activeTable, setActiveTable] = useState<number | null>(null);
 
   useEffect(() => {
-    (async () => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableParam = urlParams.get("table");
+    const storedTable = localStorage.getItem("nimza_active_table");
+    const found = tableParam || storedTable;
+    if (found && !isNaN(Number(found))) {
+      setActiveTable(Number(found));
       try {
-        const a = await supabase.from("categories").select("*").order("id");
-        const b = await supabase.from("menu_items").select("*,categories(name)").order("id");
-        if (a.data && a.data.length > 0) setCats(a.data);
-        if (b.data && b.data.length > 0) setItems(b.data);
-      } catch (err) {
-        // Fallback default items provide a seamless experience
-      }
-    })();
+        localStorage.setItem("nimza_active_table", String(found));
+      } catch {}
+    }
   }, []);
+
+  useEffect(() => {
+    const handleCustomSync = () => refetch();
+    window.addEventListener("nimza_menu_updated", handleCustomSync);
+    window.addEventListener("storage", handleCustomSync);
+
+    return () => {
+      window.removeEventListener("nimza_menu_updated", handleCustomSync);
+      window.removeEventListener("storage", handleCustomSync);
+    };
+  }, [refetch]);
+
+  const handleOpenCustomize = (dish: any) => {
+    if (dish.is_available === false) {
+      toast(`"${dish.name}" is currently sold out`, "error");
+      return;
+    }
+    setCustomizingDish(dish);
+    setIsCustomizeModalOpen(true);
+  };
+
+  const handleSaveCustomization = (customization: FoodCustomization, qty: number) => {
+    if (!customizingDish) return;
+    add(customizingDish, customization, qty);
+  };
+
+  const handleQuickAdd = (item: any) => {
+    if (item.is_available === false) {
+      toast(`"${item.name}" is currently sold out`, "error");
+      return;
+    }
+    add(item);
+  };
 
   const filtered = items
     .filter((item) => {
       const matchCat = !selectedCat || item.category_id === selectedCat;
+      const q = query.toLowerCase().trim();
       const matchQuery =
-        item.name.toLowerCase().includes(query.toLowerCase()) ||
-        (item.description && item.description.toLowerCase().includes(query.toLowerCase()));
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        (item.description && item.description.toLowerCase().includes(q)) ||
+        (item.ingredients && item.ingredients.toLowerCase().includes(q));
       return matchCat && matchQuery;
     })
     .sort((a, b) => {
       if (sortBy === "price-asc") return Number(a.price) - Number(b.price);
       if (sortBy === "price-desc") return Number(b.price) - Number(a.price);
+      if (sortBy === "available") {
+        const aAvail = a.is_available !== false ? 1 : 0;
+        const bAvail = b.is_available !== false ? 1 : 0;
+        return bAvail - aAvail;
+      }
       return 0;
     });
 
   const handleAdd = (item: any) => {
+    if (item.is_available === false) {
+      toast(`"${item.name}" is currently sold out`, "error");
+      return;
+    }
     add(item);
     toast(`Added "${item.name}" to your order`, "success");
   };
 
   return (
-    <main className="min-h-screen bg-olive text-ivory pt-36 pb-28 px-6 md:px-12 relative overflow-hidden">
-      {/* Ambient background glows */}
+    <main className="min-h-screen bg-[#FAFAF8] text-charcoal pt-36 pb-28 px-6 md:px-12 relative overflow-hidden">
+      {/* Subtle Luxury Ambient Glow */}
       <div className="absolute top-20 right-10 w-96 h-96 rounded-full bg-gold/10 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-black/30 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-sand/30 blur-[120px] pointer-events-none" />
 
       <div className="mx-auto max-w-7xl relative z-10">
+        {/* Active QR Table Service Banner */}
+        {activeTable && (
+          <div className="max-w-3xl mx-auto mb-10 p-4 rounded-3xl bg-charcoal text-sand border-2 border-gold/70 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3.5">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gold text-charcoal font-black text-lg shadow">
+                {activeTable}
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-serif font-bold text-white text-base">
+                    Table #{activeTable} Digital Menu
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    QR Dine-In Active
+                  </span>
+                </div>
+                <p className="text-xs text-sand/70 mt-0.5">
+                  Orders placed will be dispatched directly to Table #{activeTable}.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={`/cart?table=${activeTable}`}
+              className="px-4 py-2 rounded-2xl bg-gold text-charcoal hover:bg-gold-light text-xs font-bold shadow transition-all shrink-0"
+            >
+              View Table Cart →
+            </Link>
+          </div>
+        )}
         {/* Header Title with Botanical Emblem */}
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/15 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-gold mb-3">
-            <Sparkles size={13} />
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Sparkles size={14} className="text-gold" />
             <span>The Daily Harvest</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-ivory">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#1F241F]">
             Culinary Collection
           </h1>
-          <p className="mt-4 text-sand/80 text-base md:text-lg font-light leading-relaxed">
-            Every dish is made strictly to order using fresh ingredients from our trusted organic growers.
+          <p className="mt-4 text-charcoal/70 text-base md:text-lg font-light leading-relaxed">
+            Every dish is made strictly to order using seasonal ingredients from our trusted organic growers.
           </p>
+
+          {isAdmin && (
+            <div className="mt-5">
+              <Link
+                href="/admin/menu"
+                className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold text-[#1F241F] hover:bg-gold hover:text-charcoal transition-all shadow-sm"
+              >
+                <ChefHat size={14} className="text-gold" />
+                <span>Executive: Manage Dishes & Pricing in Menu Studio ↗</span>
+              </Link>
+            </div>
+          )}
         </div>
 
+        {/* AI Culinary Sommelier & Taste Profile Matcher */}
+        <AiRecommendations />
+
         {/* Toolbar: Category Filter Pills, Search Bar, and Sorter */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-12 pb-8 border-b border-gold/20">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-12 pb-8 border-b border-sand">
           {/* Category Pills */}
           <div className="flex flex-wrap items-center gap-2">
             {[{ id: 0, name: "All Dishes" }, ...cats].map((cat) => {
@@ -180,13 +200,14 @@ export default function Menu() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCat(cat.id)}
-                  className={`rounded-full px-5 py-2 text-xs md:text-sm font-semibold tracking-wide transition-all duration-300 ${
+                  className={`rounded-full px-5 py-2 text-xs md:text-sm font-semibold tracking-wide transition-all duration-300 flex items-center gap-1.5 ${
                     isSelected
-                      ? "bg-gold text-charcoal font-bold shadow-lg shadow-gold/30 scale-105"
-                      : "border border-sand/30 text-sand hover:bg-ivory/10 hover:border-gold/50"
+                      ? "bg-[#1F241F] text-gold font-bold shadow-md scale-105"
+                      : "bg-white border border-sand text-charcoal/80 hover:border-gold hover:text-charcoal shadow-sm"
                   }`}
                 >
-                  {cat.name}
+                  <Utensils size={13} className={isSelected ? "text-gold" : "text-charcoal/40"} />
+                  <span>{cat.name}</span>
                 </button>
               );
             })}
@@ -195,118 +216,222 @@ export default function Menu() {
           {/* Search & Sort Controls */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1 md:w-64">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sand/60" />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal/40" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search flavours..."
-                className="w-full rounded-full border border-sand/40 bg-olive-deep/80 pl-9 pr-4 py-2 text-xs md:text-sm text-ivory outline-none placeholder:text-sand/50 focus:border-gold focus:ring-1 focus:ring-gold"
+                placeholder="Search flavours or ingredients..."
+                className="w-full rounded-full border border-sand bg-white pl-9 pr-4 py-2.5 text-xs md:text-sm text-charcoal outline-none placeholder:text-charcoal/40 focus:border-gold focus:ring-2 focus:ring-gold/20 shadow-sm transition-all"
               />
             </div>
 
-            <select
-              value={sortBy}
-              onChange={(e: any) => setSortBy(e.target.value)}
-              className="rounded-full border border-sand/40 bg-olive-deep/80 px-4 py-2 text-xs md:text-sm text-sand outline-none focus:border-gold cursor-pointer"
-            >
-              <option value="featured">Featured</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-            </select>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e: any) => setSortBy(e.target.value)}
+                className="rounded-full border border-sand bg-white pl-4 pr-8 py-2.5 text-xs md:text-sm text-charcoal outline-none focus:border-gold cursor-pointer shadow-sm appearance-none font-medium"
+              >
+                <option value="featured">Featured</option>
+                <option value="available">Available First</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </select>
+              <ArrowUpDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-charcoal/40" />
+            </div>
           </div>
         </div>
 
         {/* Dishes Grid */}
         {filtered.length === 0 ? (
-          <div className="py-20 text-center text-sand">
-            <p className="text-xl font-serif">No dishes match your search criteria.</p>
+          <div className="py-20 text-center text-charcoal/60 bg-white rounded-3xl border border-sand shadow-sm">
+            <Utensils size={40} className="mx-auto text-gold mb-3 opacity-60" />
+            <p className="text-xl font-serif text-[#1F241F]">No dishes match your search criteria.</p>
             <button
               onClick={() => {
                 setQuery("");
                 setSelectedCat(0);
               }}
-              className="btn mt-6 !text-xs !py-2.5"
+              className="btn mt-6 !text-xs !py-2.5 inline-flex items-center gap-2"
             >
-              Reset Filters
+              <Filter size={14} />
+              <span>Reset Filters</span>
             </button>
           </div>
         ) : (
           <motion.div layout className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence>
-              {filtered.map((item, idx) => (
-                <motion.article
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.45 }}
-                  className={`group relative overflow-hidden bg-ivory text-charcoal rounded-3xl shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/40 flex flex-col justify-between ${
-                    idx % 3 === 1 ? "lg:mt-6 border-2 border-gold/40" : ""
-                  }`}
-                >
-                  {/* Image & Badges */}
-                  <div>
-                    <div className="relative h-60 w-full overflow-hidden">
-                      <Img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+              {filtered.map((item) => {
+                const isItemAvailable = item.is_available !== false;
 
-                      {/* Top Badges */}
-                      <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                        {item.badge && (
-                          <span className="flex items-center gap-1 rounded-full bg-gold px-3 py-1 text-[11px] font-bold text-olive shadow">
-                            <Star size={11} />
-                            {item.badge}
-                          </span>
-                        )}
-                        {item.dietary && (
-                          <span className="rounded-full bg-olive-deep/80 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-sand">
-                            {item.dietary}
-                          </span>
-                        )}
+                return (
+                  <motion.article
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.45 }}
+                    className={`group relative overflow-hidden bg-white text-charcoal rounded-3xl border border-sand/80 shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-gold/50 flex flex-col justify-between ${
+                      !isItemAvailable ? "opacity-90" : ""
+                    }`}
+                  >
+                    {/* Image & Badges */}
+                    <div>
+                      <div className="relative h-60 w-full overflow-hidden bg-sand/20">
+                        <Img
+                          src={item.image_url}
+                          alt={item.name}
+                          className={`h-full w-full object-cover transition duration-700 ${
+                            !isItemAvailable ? "grayscale-[35%] brightness-90" : "group-hover:scale-105"
+                          }`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-40" />
+
+                        {/* Top Badges */}
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                          {!isItemAvailable ? (
+                            <span className="flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-[11px] font-bold text-white shadow-md">
+                              <XCircle size={12} />
+                              <span>Sold Out</span>
+                            </span>
+                          ) : item.badge ? (
+                            <span className="flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-[11px] font-bold text-[#1F241F] shadow-sm">
+                              <Star size={11} fill="#1F241F" />
+                              {item.badge}
+                            </span>
+                          ) : null}
+
+                          {item.dietary && (
+                            <span className="flex items-center gap-1 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-[#1F241F] border border-sand shadow-sm">
+                              <Leaf size={11} className="text-emerald-700" />
+                              {item.dietary}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Heart-Shaped Favorite Toggle */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFavorite(item);
+                          }}
+                          aria-label={
+                            isFavorite(item.id)
+                              ? `Remove ${item.name} from favorites`
+                              : `Add ${item.name} to favorites`
+                          }
+                          className="absolute top-3 right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/95 backdrop-blur-md shadow-md border border-sand/80 hover:scale-110 active:scale-90 transition-all duration-200"
+                          title={isFavorite(item.id) ? "In your favorites (click to remove)" : "Save to favorites"}
+                        >
+                          <Heart
+                            size={16}
+                            className={`transition-all duration-300 ${
+                              isFavorite(item.id)
+                                ? "fill-rose-500 text-rose-500 scale-110"
+                                : "text-charcoal/50 hover:text-rose-500"
+                            }`}
+                          />
+                        </button>
+
+                        {/* Price Badge */}
+                        <div className="absolute bottom-3 right-3 rounded-full bg-[#1F241F]/90 backdrop-blur-md px-3.5 py-1 text-base font-serif font-bold text-gold border border-gold/30 shadow-md">
+                          ${Number(item.price).toFixed(2)}
+                        </div>
                       </div>
 
-                      {/* Price Badge */}
-                      <div className="absolute bottom-3 right-3 rounded-full bg-olive-deep/90 backdrop-blur-md px-3.5 py-1 text-base font-serif font-bold text-gold border border-gold/30">
-                        ${Number(item.price).toFixed(2)}
+                      {/* Content */}
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#B99A5B]">
+                            <Utensils size={12} />
+                            <span>{item.categories?.name || "Nimza Kitchen"}</span>
+                          </div>
+                          {!isItemAvailable && (
+                            <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                              Unavailable Today
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="font-serif text-2xl font-bold text-[#1F241F] group-hover:text-gold transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="mt-2 text-sm text-charcoal/70 leading-relaxed font-light line-clamp-2">
+                          {item.description}
+                        </p>
+
+                        {/* Ingredients Tag Section */}
+                        {item.ingredients && (
+                          <div className="mt-3.5 pt-3 border-t border-sand/60">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal/50 block mb-1">
+                              Key Ingredients:
+                            </span>
+                            <p className="text-xs text-charcoal/75 italic line-clamp-2 font-serif">
+                              {item.ingredients}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-6">
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-charcoal/50">
-                        {item.categories?.name || "Nimza Kitchen"}
-                      </span>
-                      <h3 className="font-serif text-2xl font-bold text-olive mt-1 group-hover:text-gold transition-colors">
-                        {item.name}
-                      </h3>
-                      <p className="mt-2 text-sm text-charcoal/70 leading-relaxed font-light">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
+                    {/* Order & Customize Action Buttons in Footer */}
+                    <div className="p-6 pt-0 flex items-center gap-2">
+                      <button
+                        disabled={!isItemAvailable}
+                        onClick={() => handleOpenCustomize(item)}
+                        className={`flex-1 rounded-full py-3 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                          !isItemAvailable
+                            ? "bg-sand/40 text-charcoal/40 cursor-not-allowed border border-sand"
+                            : "bg-[#1F241F] text-white hover:bg-gold hover:text-[#1F241F] shadow-sm hover:shadow-gold/20 active:scale-95"
+                        }`}
+                      >
+                        {!isItemAvailable ? (
+                          <>
+                            <XCircle size={15} />
+                            <span>Currently Sold Out</span>
+                          </>
+                        ) : (
+                          <>
+                            <SlidersHorizontal size={14} className="text-gold" />
+                            <span>Customize & Add</span>
+                          </>
+                        )}
+                      </button>
 
-                  {/* Order Button in Footer */}
-                  <div className="p-6 pt-0">
-                    <button
-                      onClick={() => handleAdd(item)}
-                      className="btn-d w-full !py-2.5 !text-xs flex items-center justify-center gap-2 group-hover:bg-gold group-hover:text-charcoal transition-all shadow-sm"
-                    >
-                      <Plus size={15} />
-                      <span>Add to Order</span>
-                    </button>
-                  </div>
-                </motion.article>
-              ))}
+                      {isItemAvailable && (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickAdd(item)}
+                          title="Quick Add with Standard Recipe"
+                          className="p-3 rounded-full border border-sand bg-[#FAF9F5] hover:bg-gold hover:text-[#1F241F] text-charcoal transition-all shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </motion.article>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}
       </div>
+
+      {/* Food Customization Modal */}
+      <FoodCustomizationModal
+        isOpen={isCustomizeModalOpen}
+        onClose={() => {
+          setIsCustomizeModalOpen(false);
+          setCustomizingDish(null);
+        }}
+        dish={customizingDish}
+        mode="add"
+        onSave={handleSaveCustomization}
+      />
     </main>
   );
 }

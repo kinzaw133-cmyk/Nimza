@@ -2,24 +2,27 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   MapPin,
-  Clock,
-  Mail,
   Phone,
+  Mail,
+  Send,
   Instagram,
   Facebook,
-  Twitter,
+  Youtube,
   Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Award,
 } from "lucide-react";
 import { toast } from "@/lib/notify";
-import NimzaLogo from "./NimzaLogo";
 
 export default function Footer() {
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
+
+  // Do not render public consumer footer on dedicated admin panel & kitchen display (KDS) pages
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/chef")) {
+    return null;
+  }
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +30,7 @@ export default function Footer() {
       toast("Please enter a valid email address", "error");
       return;
     }
-    toast("Welcome to the Nimza Connoisseurs Club. Check your inbox soon.", "success");
+    toast("Thank you for subscribing! Check your inbox for exclusive tasting offers.", "success");
     setEmail("");
   };
 
@@ -39,205 +42,198 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-olive-deep text-ivory border-t-2 border-gold/40 pt-20 pb-12 px-6 md:px-12 overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full bg-gold/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-10 w-96 h-96 rounded-full bg-olive/30 blur-[140px] pointer-events-none" />
+    <footer className="relative bg-[#FAF9F5] text-charcoal border-t border-sand/70 pt-16 pb-10 px-6 md:px-12 lg:px-16 overflow-hidden select-none">
+      {/* Decorative veggie & culinary accents */}
+      {/* Bottom-left: Tomatoes with basil */}
+      <img
+        src="/images/footer-tomato.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute -left-4 sm:-left-2 bottom-0 w-24 sm:w-36 opacity-80 pointer-events-none select-none z-0"
+        draggable={false}
+      />
+      {/* Top-left: Floating basil leaf */}
+      <img
+        src="/images/footer-leaf-tl.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute left-10 sm:left-20 top-4 sm:top-8 w-10 sm:w-16 opacity-60 pointer-events-none select-none z-0 -rotate-12 hidden sm:block"
+        draggable={false}
+      />
+      {/* Right side: Green herb leaves */}
+      <img
+        src="/images/footer-leaf-r.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute -right-3 sm:-right-1 top-16 sm:top-20 w-16 sm:w-24 opacity-70 pointer-events-none select-none z-0 hidden sm:block"
+        draggable={false}
+      />
+      {/* Top-right: Plate accent */}
+      <img
+        src="/images/footer-plate-top.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute right-8 sm:right-16 -top-6 sm:-top-8 w-32 sm:w-48 opacity-50 pointer-events-none select-none z-0 hidden sm:block"
+        draggable={false}
+      />
 
       <div className="mx-auto max-w-7xl relative z-10">
-        {/* Top Brand Banner */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-16 border-b border-gold/20 items-center">
-          <div className="md:col-span-4 flex flex-col items-start">
+        {/* Main 4-Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-14">
+          {/* Column 1: Brand & Logo Pill (4 cols) */}
+          <div className="lg:col-span-4 flex flex-col items-start pr-0 lg:pr-6">
+            {/* White Rounded Square Logo Card */}
             <Link href="/" className="inline-block group mb-4">
-              <NimzaLogo variant="pebble" size="lg" />
+              <div className="w-24 h-24 rounded-2xl bg-white border border-sand/80 shadow-xs flex items-center justify-center p-2 transition-transform duration-300 group-hover:scale-105 group-hover:border-gold/50">
+                <img
+                  src="/logo-footer.jpg"
+                  alt="Nimza Restaurant"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </Link>
-            <p className="text-sand/80 text-sm max-w-sm leading-relaxed">
-              Fine dining, patience, and unhurried hospitality. Cooked with seasonal produce over open flame.
+
+            <p className="text-xs sm:text-sm text-charcoal/70 leading-relaxed max-w-xs mb-5 font-sans">
+              Fine dining, patience, and unhurried hospitality.
             </p>
-          </div>
 
-          <div className="md:col-span-8 flex flex-wrap items-center justify-start md:justify-end gap-6 text-sand/80 text-xs uppercase tracking-widest">
-            <div className="flex items-center gap-2 rounded-full border border-gold/30 bg-olive-muted/60 px-4 py-2">
-              <Award size={16} className="text-gold" />
-              <span>Michelin Standard Selection 2024</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-gold/30 bg-olive-muted/60 px-4 py-2">
-              <ShieldCheck size={16} className="text-gold" />
-              <span>100% Organic Farm-to-Table</span>
-            </div>
-            <button
-              onClick={handleReplaySplash}
-              className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-gold font-bold hover:bg-gold hover:text-charcoal transition-all"
-            >
-              <Sparkles size={14} />
-              <span>Replay Logo Splash</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Middle Navigation Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 py-16">
-          {/* Col 1: Gastronomy & Menu */}
-          <div>
-            <h4 className="font-serif text-xl font-bold text-gold mb-5 flex items-center gap-2">
-              <span>Gastronomy</span>
-            </h4>
-            <ul className="space-y-3 text-sm text-sand/80">
-              <li>
-                <Link href="/menu" className="hover:text-gold transition-colors">
-                  Signature Menu & Tasting
-                </Link>
-              </li>
-              <li>
-                <Link href="/reservations" className="hover:text-gold transition-colors">
-                  Table Reservations
-                </Link>
-              </li>
-              <li>
-                <Link href="/gallery" className="hover:text-gold transition-colors">
-                  Atmosphere & Gallery
-                </Link>
-              </li>
-              <li>
-                <Link href="/cart" className="hover:text-gold transition-colors">
-                  Private Delivery & Cart
-                </Link>
-              </li>
-              <li>
-                <Link href="/payment-methods" className="hover:text-gold transition-colors">
-                  Payment Methods & Invoicing
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 2: Heritage & About */}
-          <div>
-            <h4 className="font-serif text-xl font-bold text-gold mb-5">
-              Heritage
-            </h4>
-            <ul className="space-y-3 text-sm text-sand/80">
-              <li>
-                <Link href="/about" className="hover:text-gold transition-colors">
-                  Our Culinary Philosophy
-                </Link>
-              </li>
-              <li>
-                <Link href="/about#chef" className="hover:text-gold transition-colors">
-                  Chef Elias Varga
-                </Link>
-              </li>
-              <li>
-                <Link href="/about#pillars" className="hover:text-gold transition-colors">
-                  The Four Pillars of Craft
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-gold transition-colors">
-                  Private Events & Wine Cellar
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="hover:text-gold transition-colors">
-                  VIP Club Sign In
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 3: Hours & Address */}
-          <div>
-            <h4 className="font-serif text-xl font-bold text-gold mb-5">
-              Service Hours
-            </h4>
-            <div className="space-y-3 text-sm text-sand/80">
-              <p className="flex items-start gap-2.5">
-                <Clock size={16} className="text-gold shrink-0 mt-0.5" />
-                <span>
-                  <strong>Lunch Sitting:</strong> 12:00 – 16:00<br />
-                  <strong>Dinner Sitting:</strong> 18:30 – 23:30
-                </span>
-              </p>
-              <p className="flex items-start gap-2.5">
-                <MapPin size={16} className="text-gold shrink-0 mt-0.5" />
-                <span>12 Garden Road, Luxury District</span>
-              </p>
-              <p className="flex items-center gap-2.5">
-                <Phone size={16} className="text-gold shrink-0" />
-                <span>+92 300 0000000 / Concierge</span>
-              </p>
-              <p className="flex items-center gap-2.5">
-                <Mail size={16} className="text-gold shrink-0" />
-                <span>concierge@nimza.example</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Col 4: Newsletter */}
-          <div>
-            <h4 className="font-serif text-xl font-bold text-gold mb-5">
-              Privilege Newsletter
-            </h4>
-            <p className="text-xs text-sand/80 mb-4 leading-relaxed">
-              Receive seasonal menu previews, sommelier recommendations, and invitations to private tasting dinners.
-            </p>
-            <form onSubmit={handleSubscribe} className="space-y-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="inp-dark !text-xs !py-3 w-full"
-                required
-              />
-              <button
-                type="submit"
-                className="btn w-full !py-2.5 !text-xs !font-bold flex items-center justify-center gap-2"
+            {/* Social Media Circular Buttons */}
+            <div className="flex items-center gap-2.5">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Facebook"
+                className="w-9 h-9 rounded-full bg-[#EFECE4] hover:bg-gold hover:text-white text-charcoal/80 flex items-center justify-center transition-all duration-200 shadow-2xs"
               >
-                <span>Subscribe to Privilege</span>
-                <ArrowRight size={14} />
-              </button>
+                <Facebook size={16} />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="w-9 h-9 rounded-full bg-[#EFECE4] hover:bg-gold hover:text-white text-charcoal/80 flex items-center justify-center transition-all duration-200 shadow-2xs"
+              >
+                <Instagram size={16} />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="YouTube"
+                className="w-9 h-9 rounded-full bg-[#EFECE4] hover:bg-gold hover:text-white text-charcoal/80 flex items-center justify-center transition-all duration-200 shadow-2xs"
+              >
+                <Youtube size={16} />
+              </a>
+            </div>
+          </div>
+
+          {/* Column 2: Quick Links (2.5 cols) */}
+          <div className="lg:col-span-2.5 lg:border-r border-sand/60 pr-0 lg:pr-6">
+            <h4 className="font-serif font-bold text-lg md:text-xl text-[#9E2A2B] mb-5 tracking-tight">
+              Quick Links
+            </h4>
+            <ul className="space-y-3 text-xs sm:text-sm text-charcoal/75">
+              <li>
+                <Link href="/menu" className="hover:text-[#9E2A2B] transition-colors">
+                  Menu
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-[#9E2A2B] transition-colors">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link href="/gallery" className="hover:text-[#9E2A2B] transition-colors">
+                  Gallery
+                </Link>
+              </li>
+              <li>
+                <Link href="/reservations" className="hover:text-[#9E2A2B] transition-colors">
+                  Reservations
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Contact (2.5 cols) */}
+          <div className="lg:col-span-3 lg:border-r border-sand/60 pr-0 lg:pr-6">
+            <h4 className="font-serif font-bold text-lg md:text-xl text-[#9E2A2B] mb-5 tracking-tight">
+              Contact
+            </h4>
+            <ul className="space-y-3.5 text-xs sm:text-sm text-charcoal/75">
+              <li className="flex items-center gap-2.5">
+                <MapPin size={16} className="text-charcoal/60 shrink-0" />
+                <span>12 Garden Road, Luxury District</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Phone size={16} className="text-charcoal/60 shrink-0" />
+                <a href="tel:+923000000000" className="hover:text-[#9E2A2B] transition-colors">
+                  +92 300 0000000
+                </a>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Mail size={16} className="text-charcoal/60 shrink-0" />
+                <a href="mailto:concierge@nimza.example" className="hover:text-[#9E2A2B] transition-colors">
+                  concierge@nimza.example
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Newsletter (3 cols) */}
+          <div className="lg:col-span-2.5">
+            <h4 className="font-serif font-bold text-lg md:text-xl text-[#9E2A2B] mb-2 tracking-tight">
+              Newsletter
+            </h4>
+            <p className="text-xs sm:text-sm text-charcoal/70 mb-4 font-sans">
+              Get exclusive updates &amp; offers.
+            </p>
+
+            <form onSubmit={handleSubscribe} className="relative">
+              <div className="relative flex items-center rounded-full bg-white border border-sand/90 shadow-xs p-1 pl-4 focus-within:border-gold transition-colors">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email address"
+                  className="bg-transparent text-xs text-charcoal placeholder:text-charcoal/40 outline-none w-full pr-2"
+                />
+                <button
+                  type="submit"
+                  aria-label="Subscribe to newsletter"
+                  className="w-8 h-8 rounded-full bg-[#B99A5B] hover:bg-[#A38547] text-white flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-2xs"
+                >
+                  <Send size={13} className="translate-x-[1px]" />
+                </button>
+              </div>
             </form>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Socials */}
-        <div className="pt-8 border-t border-gold/20 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-sand/60">
-          <p>© {new Date().getFullYear()} Nimza Restaurant & Lounge. All rights reserved.</p>
+        {/* Bottom Legal & Attribution Bar */}
+        <div className="pt-6 border-t border-sand/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] sm:text-xs text-charcoal/60">
+          <p>© 2026 Nimza Restaurant &amp; Lounge. All rights reserved.</p>
 
-          <div className="flex items-center gap-4">
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram"
-              className="grid h-8 w-8 place-items-center rounded-full border border-gold/30 text-sand hover:bg-gold hover:text-charcoal transition-all"
+          <div className="flex items-center gap-3">
+            <Link href="/privacy" className="hover:text-charcoal transition-colors">
+              Privacy Policy
+            </Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-charcoal transition-colors">
+              Terms &amp; Conditions
+            </Link>
+            <span>•</span>
+            <button
+              onClick={handleReplaySplash}
+              className="hover:text-gold transition-colors flex items-center gap-1 font-semibold"
             >
-              <Instagram size={14} />
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook"
-              className="grid h-8 w-8 place-items-center rounded-full border border-gold/30 text-sand hover:bg-gold hover:text-charcoal transition-all"
-            >
-              <Facebook size={14} />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Twitter"
-              className="grid h-8 w-8 place-items-center rounded-full border border-gold/30 text-sand hover:bg-gold hover:text-charcoal transition-all"
-            >
-              <Twitter size={14} />
-            </a>
+              <Sparkles size={11} className="text-gold" />
+              <span>Replay Splash</span>
+            </button>
           </div>
-
-          <p className="font-serif tracking-widest text-[11px] text-gold/80 uppercase">
-            Pure Elegance • Budapest & Milan Tradition
-          </p>
         </div>
       </div>
     </footer>

@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, Award, Clock, Heart, Shield, ArrowRight, Wine, ChefHat } from "lucide-react";
+import { Sparkles, Award, Clock, Heart, Shield, ArrowRight, Wine, ChefHat, CalendarCheck, PhoneCall, UtensilsCrossed } from "lucide-react";
 import Img from "@/components/Img";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
 
@@ -60,17 +60,18 @@ const BRIGADE = [
 
 export default function About() {
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
+    <main className="min-h-screen bg-[#FAFAF8] text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
       <div className="mx-auto max-w-7xl">
         {/* Editorial Header */}
         <div className="max-w-3xl mx-auto text-center mb-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-olive mb-4">
-            <Sparkles size={13} className="text-gold" /> Our Story & Heritage
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Sparkles size={14} className="text-gold" />
+            <span>Our Story & Heritage</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-olive tracking-tight">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold text-[#1F241F] tracking-tight">
             A Table Built on Patience
           </h1>
-          <p className="mt-6 text-charcoal/80 text-lg md:text-xl font-light leading-relaxed">
+          <p className="mt-6 text-charcoal/70 text-lg md:text-xl font-light leading-relaxed">
             Nimza was born from a singular belief: in an age of hurried dining, genuine luxury is the luxury of time, craft, and honest ingredients.
           </p>
         </div>
@@ -78,22 +79,22 @@ export default function About() {
         {/* Feature Hero Split */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-28">
           <div className="lg:col-span-7 relative">
-            <div className="relative overflow-hidden rounded-[3rem] border border-gold/30 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[3rem] border border-sand shadow-2xl bg-white">
               <Img
                 src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1400&q=80"
                 alt="Nimza Dining Hall"
                 className="h-[520px] w-full object-cover transition-transform duration-700 hover:scale-105"
               />
             </div>
-            <div className="absolute -bottom-6 -right-6 p-4 rounded-2xl bg-olive-deep text-ivory border border-gold/40 shadow-xl max-w-xs hidden sm:block">
-              <p className="text-xs uppercase tracking-widest text-gold font-bold">Ambiance</p>
+            <div className="absolute -bottom-6 -right-6 p-5 rounded-3xl bg-[#1F241F] text-ivory border border-gold/40 shadow-xl max-w-xs hidden sm:block">
+              <p className="text-[10px] uppercase tracking-widest text-gold font-bold">Ambiance</p>
               <p className="font-serif text-sm font-semibold mt-1">Warm Italian lighting, linen drapery, and acoustic calm.</p>
             </div>
           </div>
 
           <div className="lg:col-span-5 space-y-6">
             <span className="text-xs uppercase tracking-[0.3em] text-gold font-bold">The Inception</span>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-olive">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#1F241F]">
               Where Fire Meets Quiet Craft
             </h2>
             <p className="text-charcoal/80 leading-relaxed font-light">
@@ -116,7 +117,7 @@ export default function About() {
         <div className="py-20 border-t border-sand mb-24">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-xs uppercase tracking-[0.3em] text-gold font-bold">Guiding Philosophy</span>
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-olive mt-2">
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1F241F] mt-2">
               The Four Pillars of Nimza
             </h2>
           </div>
@@ -125,12 +126,12 @@ export default function About() {
             {PILLARS.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="p-8 rounded-3xl bg-sand/30 border border-sand hover:border-gold/60 transition-all hover:-translate-y-1.5 shadow-sm"
+                className="p-8 rounded-3xl bg-white border border-sand hover:border-gold/60 transition-all hover:-translate-y-1.5 shadow-sm"
               >
                 <div className="w-12 h-12 rounded-2xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center mb-6">
                   <Icon size={24} />
                 </div>
-                <h3 className="font-serif text-xl font-bold text-olive mb-2">{title}</h3>
+                <h3 className="font-serif text-xl font-bold text-[#1F241F] mb-2">{title}</h3>
                 <p className="text-charcoal/70 text-sm leading-relaxed font-light">{desc}</p>
               </div>
             ))}
@@ -138,7 +139,7 @@ export default function About() {
         </div>
 
         {/* Milestones Timeline */}
-        <div className="bg-olive rounded-[3rem] p-10 md:p-16 text-ivory mb-28 border border-gold/30 relative overflow-hidden">
+        <div className="bg-[#1F241F] rounded-[3rem] p-10 md:p-16 text-ivory mb-28 border border-gold/30 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-gold/10 blur-[120px] pointer-events-none" />
 
           <div className="text-center max-w-2xl mx-auto mb-16 relative z-10">
@@ -150,7 +151,7 @@ export default function About() {
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
             {MILESTONES.map((m, idx) => (
-              <div key={m.year} className="relative p-6 rounded-2xl bg-olive-deep/70 border border-gold/20">
+              <div key={m.year} className="relative p-6 rounded-2xl bg-black/40 border border-gold/20">
                 <span className="font-serif text-4xl font-bold text-gold">{m.year}</span>
                 <h4 className="font-serif text-lg font-bold text-ivory mt-2">{m.title}</h4>
                 <p className="text-xs text-sand/80 mt-2 leading-relaxed font-light">{m.desc}</p>
@@ -163,7 +164,7 @@ export default function About() {
         <div className="mb-20">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-xs uppercase tracking-[0.3em] text-gold font-bold">The Artisans</span>
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-olive mt-2">
+            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1F241F] mt-2">
               The Master Brigade
             </h2>
             <p className="mt-3 text-charcoal/70 text-base">Meet the visionaries orchestrating your dining experience.</p>
@@ -192,6 +193,27 @@ export default function About() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Private Dining & Concierge Contact Section */}
+        <div className="mb-10 rounded-[2.5rem] bg-[#1F241F] text-ivory p-8 md:p-14 border border-gold/30 text-center relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+            <span className="text-xs uppercase tracking-[0.3em] text-gold font-bold">Private Engagements</span>
+            <h3 className="font-serif text-3xl md:text-4xl font-bold">Host Your Special Evening</h3>
+            <p className="text-sm text-sand/80 leading-relaxed font-light">
+              From intimate private dining in our Wine Cellar to full restaurant buyouts for celebrations, our concierge is at your service.
+            </p>
+            <div className="pt-2 flex flex-wrap justify-center gap-4">
+              <Link href="/contact" className="btn !px-6 !py-3 text-xs uppercase tracking-wider font-bold flex items-center gap-2">
+                <PhoneCall size={14} />
+                <span>Contact Concierge Desk</span>
+              </Link>
+              <Link href="/reservations" className="btn-o !px-6 !py-3 text-xs uppercase tracking-wider font-bold !bg-transparent !text-ivory !border-gold/50 hover:!bg-gold/10 flex items-center gap-2">
+                <CalendarCheck size={14} />
+                <span>Reserve Table Online</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

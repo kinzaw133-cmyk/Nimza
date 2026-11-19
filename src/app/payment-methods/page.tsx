@@ -5,124 +5,98 @@ import Link from "next/link";
 import {
   CreditCard,
   Banknote,
-  Smartphone,
-  Landmark,
   ShieldCheck,
   Sparkles,
-  Receipt,
-  FileCheck2,
-  Lock,
+  Check,
+  ArrowRight,
+  Clock,
 } from "lucide-react";
 import NimzaLogo from "@/components/NimzaLogo";
 
 const METHODS = [
   {
     icon: CreditCard,
-    title: "Major Credit & Debit Cards",
-    subtitle: "Visa, Mastercard, American Express, UnionPay",
-    desc: "Accepted at all tables with wireless contactless EMV terminals. Dual-currency settlement available.",
-    features: ["Contactless & Chip", "Apple & Google Pay supported", "Instant digital itemized receipts"],
+    title: "Credit & Debit Cards",
+    subtitle: "Visa, Mastercard & Contactless",
+    desc: "Available at table terminal or through online checkout with instant dummy simulation without charging real funds.",
+    badge: "Dummy Payment Active",
   },
   {
     icon: Banknote,
-    title: "Discreet Table Settlement",
-    subtitle: "Cash & Concierge Presentation",
-    desc: "Your bill is presented in a handcrafted Italian leather folio. Change is returned promptly with our signature mints.",
-    features: ["Local currency (PKR) & USD accepted", "Discreet table-side host service", "Zero surcharge"],
-  },
-  {
-    icon: Smartphone,
-    title: "Mobile Wallets & Instant Pay",
-    subtitle: "JazzCash, Easypaisa, Raast Instant Pay",
-    desc: "QR code available upon request at your dining table for immediate, seamless mobile transfers.",
-    features: ["Instant QR scan at table", "Direct Raast ID integration", "Zero delay confirmation"],
-  },
-  {
-    icon: Landmark,
-    title: "Corporate & Event Invoicing",
-    subtitle: "Bank Wire & Private Banquet Accounts",
-    desc: "Direct wire transfers for wedding receptions, corporate galas, and private dining buyouts.",
-    features: ["Tax compliant official NTN invoice", "30-day corporate net terms on approval", "Dedicated accounts coordinator"],
+    title: "Cash at Table",
+    subtitle: "Local Currency & USD",
+    desc: "Discreet table-side settlement presented in a handcrafted Italian leather folio with complimentary mints.",
+    badge: "Table Settlement",
   },
 ];
 
 export default function PaymentMethods() {
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-[#FAFAF8] text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-olive mb-3">
-            <Sparkles size={13} className="text-gold" /> Transparent Hospitality
+        <div className="text-center max-w-xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Sparkles size={14} className="text-gold" />
+            <span>Dining Hospitality</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-olive tracking-tight">
-            Payment Methods
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-[#1F241F] tracking-tight">
+            Payment Options
           </h1>
-          <p className="mt-4 text-charcoal/80 text-base md:text-lg font-light leading-relaxed">
-            We provide graceful, frictionless payment options suited for our esteemed guests and international travelers.
+          <p className="mt-3 text-charcoal/70 text-base font-light leading-relaxed">
+            Minimal, clean, and transparent payment settlement designed for refined dining.
           </p>
         </div>
 
-        {/* 4 Cards Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 mb-20">
+        {/* Simplified Clean Cards */}
+        <div className="grid gap-6 sm:grid-cols-2 mb-12">
           {METHODS.map((m) => {
             const Icon = m.icon;
             return (
               <div
                 key={m.title}
-                className="group p-8 md:p-10 rounded-[2.5rem] bg-white border border-sand shadow-sm hover:border-gold/60 transition-all hover:-translate-y-1.5 flex flex-col justify-between"
+                className="p-8 rounded-[2rem] bg-white border border-sand shadow-sm hover:border-gold/60 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/30 text-gold flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <Icon size={28} />
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-sand/30 border border-sand text-[#1F241F] flex items-center justify-center">
+                      <Icon size={22} />
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                      {m.badge}
+                    </span>
                   </div>
-                  <h3 className="font-serif text-2xl font-bold text-olive">{m.title}</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-gold-dark mt-1">
-                    {m.subtitle}
-                  </p>
-                  <p className="text-charcoal/80 text-sm mt-3 leading-relaxed font-light">
+
+                  <h3 className="font-serif text-2xl font-bold text-[#1F241F]">{m.title}</h3>
+                  <p className="text-xs font-semibold text-gold mt-1">{m.subtitle}</p>
+                  <p className="text-charcoal/70 text-sm mt-3 leading-relaxed font-light">
                     {m.desc}
                   </p>
-
-                  <ul className="mt-6 space-y-2.5 pt-6 border-t border-sand">
-                    {m.features.map((feat) => (
-                      <li key={feat} className="flex items-center gap-2 text-xs text-charcoal/70">
-                        <FileCheck2 size={14} className="text-emerald-700 shrink-0" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Security & Gratuity Banner */}
-        <div className="rounded-[3rem] bg-olive-deep text-ivory p-10 md:p-14 border border-gold/40 shadow-2xl relative overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            <div className="md:col-span-8 space-y-4">
-              <div className="flex items-center gap-2 text-gold text-xs uppercase tracking-widest font-bold">
-                <Lock size={15} />
-                <span>Security & Fair Gratuity Assurance</span>
-              </div>
-              <h3 className="font-serif text-3xl font-bold text-ivory">
-                Transparent Billing & Zero Hidden Surcharges
-              </h3>
-              <p className="text-sand/80 text-sm leading-relaxed font-light">
-                All listed prices include local sales tax. Gratuity for our kitchen and floor staff is entirely at your discretion. Detailed tax-compliant invoices are provided immediately upon request.
-              </p>
+        {/* Minimal Bottom Assurance & Call to Action */}
+        <div className="rounded-3xl bg-white border border-sand p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-sand/30 text-gold flex items-center justify-center shrink-0">
+              <ShieldCheck size={20} />
             </div>
-
-            <div className="md:col-span-4 flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-olive-muted/60 border border-gold/20">
-              <NimzaLogo variant="circle" size="md" />
-              <p className="font-serif text-lg font-bold text-ivory mt-3">Nimza Concierge</p>
-              <p className="text-xs text-sand/70 mt-0.5">Assistance with corporate billing</p>
-              <Link href="/contact" className="btn-gold-outline !py-2 !px-4 !text-xs mt-4">
-                Contact Concierge
-              </Link>
+            <div>
+              <p className="text-sm font-bold text-[#1F241F]">Zero Surcharges & Clear Receipts</p>
+              <p className="text-xs text-charcoal/60">All prices include local taxes. Gratuity is entirely optional.</p>
             </div>
           </div>
+
+          <Link
+            href="/cart"
+            className="btn !py-2.5 !px-5 text-xs font-bold uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Proceed to Checkout</span>
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </main>

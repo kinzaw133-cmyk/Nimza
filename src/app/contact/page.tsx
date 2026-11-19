@@ -45,17 +45,18 @@ export default function Contact() {
   };
 
   return (
-    <main className="min-h-screen bg-ivory text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
+    <main className="min-h-screen bg-[#FAFAF8] text-charcoal pt-36 pb-28 px-6 md:px-12 overflow-hidden">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/40 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-olive mb-3">
-            <Sparkles size={13} className="text-gold" /> Dedicated Concierge
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Sparkles size={14} className="text-gold" />
+            <span>Dedicated Concierge</span>
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-olive tracking-tight">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold text-[#1F241F] tracking-tight">
             Connect With Us
           </h1>
-          <p className="mt-4 text-charcoal/80 text-base md:text-lg font-light leading-relaxed">
+          <p className="mt-4 text-charcoal/70 text-base md:text-lg font-light leading-relaxed">
             For private event buyouts, sommelier consultations, or tailored dining requests, our team is at your disposal.
           </p>
         </div>
@@ -64,7 +65,7 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left Column: Contact Details Cards & Ambiance Notes */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-[2.5rem] bg-olive-deep text-ivory p-8 md:p-10 border border-gold/30 shadow-xl relative overflow-hidden">
+            <div className="rounded-[2.5rem] bg-[#1F241F] text-ivory p-8 md:p-10 border border-gold/30 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between pb-6 mb-6 border-b border-gold/20">
                 <div>
                   <span className="text-[10px] uppercase tracking-widest text-gold font-bold">

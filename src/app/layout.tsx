@@ -1,21 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Playfair_Display, DM_Sans } from "next/font/google";
 import { CartProvider } from "@/components/Cart";
+import { WishlistProvider } from "@/components/Wishlist";
+import QueryProvider from "@/providers/QueryProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-const pf = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-pf",
-  display: "swap",
-});
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-  display: "swap",
-});
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 export const metadata: Metadata = {
   title: "Nimza Restaurant & Lounge — Fine Dining & Gastronomy",
@@ -50,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#27301B",
+  themeColor: "#FAFAF8",
   width: "device-width",
   initialScale: 1,
 };
@@ -61,16 +51,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${pf.variable} ${dm.variable}`}>
+    <html lang="en">
       <head>
         <link rel="icon" href="/logo-circle.jpg" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className="bg-ivory text-charcoal antialiased selection:bg-gold selection:text-olive">
-        <CartProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </CartProvider>
+      <body className="bg-[#FAFAF8] text-[#1F241F] antialiased selection:bg-gold selection:text-[#1F241F]">
+        <QueryProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <Navbar />
+              {children}
+              <Footer />
+              <VoiceAssistant />
+            </WishlistProvider>
+          </CartProvider>
+        </QueryProvider>
       </body>
     </html>
   );

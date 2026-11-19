@@ -81,32 +81,33 @@ export default function LogoShowcase() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-ivory-warm py-24 px-6 md:px-12 border-y border-gold/20">
+    <section className="relative overflow-hidden bg-[#FAFAF8] py-24 px-6 md:px-12 border-y border-sand">
       {/* Ambient background decoration */}
       <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gold/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-olive/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-sand/30 blur-3xl pointer-events-none" />
 
       <div className="mx-auto max-w-7xl">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/50 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-olive mb-3">
-            <Sparkles size={13} className="text-gold" /> Brand Heritage & Identity
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#1F241F] shadow-sm mb-4">
+            <Sparkles size={14} className="text-gold" />
+            <span>Brand Heritage & Identity</span>
           </div>
-          <h2 className="font-serif text-4xl md:text-5xl text-olive font-bold">
+          <h2 className="font-serif text-4xl md:text-5xl text-[#1F241F] font-bold">
             The Signatures of Nimza
           </h2>
-          <p className="mt-4 text-charcoal/80 text-base leading-relaxed">
-            Every element of our visual identity is born from the harmony of earthy deep olive, radiant antique gold, and warm natural textures.
+          <p className="mt-4 text-charcoal/70 text-base leading-relaxed">
+            Every element of our visual identity is born from the harmony of deep charcoal, radiant antique gold, and warm ceramic textures.
           </p>
         </div>
 
         {/* Main Grid: Interactive Stage on Left, Variant Selectors on Right */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           {/* Interactive Logo Stage */}
-          <div className="lg:col-span-7 flex flex-col justify-between rounded-[2.5rem] p-8 md:p-12 border border-gold/30 shadow-xl transition-all duration-500 relative overflow-hidden"
+          <div className="lg:col-span-7 flex flex-col justify-between rounded-[2.5rem] p-8 md:p-12 border border-sand shadow-sm transition-all duration-500 relative overflow-hidden"
             style={{
-              backgroundColor: bgMode === "olive" ? "#27301B" : bgMode === "charcoal" ? "#1A1A17" : "#F7F4EC",
-              color: bgMode === "ivory" ? "#24241F" : "#F7F4EC"
+              backgroundColor: bgMode === "olive" ? "#1F241F" : bgMode === "charcoal" ? "#151915" : "#FAFAF8",
+              color: bgMode === "ivory" ? "#1F241F" : "#FAFAF8"
             }}
           >
             {/* Top Toolbar: Switch background mode */}

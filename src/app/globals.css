@@ -4,21 +4,20 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
     color-scheme: light;
   }
   body {
-    background-color: #F7F4EC;
-    color: #24241F;
-    font-family: var(--font-dm), "DM Sans", system-ui, sans-serif;
+    background-color: #FAFAF8;
+    color: #1F241F;
+    font-family: "DM Sans", system-ui, sans-serif;
     overflow-x: hidden;
     selection-background-color: #B99A5B;
-    selection-color: #1F2615;
+    selection-color: #1F241F;
   }
 
   ::selection {
     background-color: #B99A5B;
-    color: #1F2615;
+    color: #1F241F;
   }
 
   /* Custom Luxury Scrollbar */
@@ -26,12 +25,12 @@
     width: 9px;
   }
   ::-webkit-scrollbar-track {
-    background: #1F2615;
+    background: #1F241F;
   }
   ::-webkit-scrollbar-thumb {
     background: #B99A5B;
     border-radius: 9999px;
-    border: 2px solid #1F2615;
+    border: 2px solid #1F241F;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #D8BF83;
@@ -40,15 +39,15 @@
 
 /* Glassmorphism & Luxury Cards */
 .glass {
-  background: rgba(247, 244, 236, 0.16);
+  background: rgba(250, 250, 248, 0.7);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(247, 244, 236, 0.35);
-  box-shadow: 0 20px 60px rgba(24, 28, 18, 0.35);
+  border: 1px solid rgba(229, 224, 216, 0.6);
+  box-shadow: 0 20px 60px rgba(31, 36, 31, 0.08);
 }
 
 .glass-dark {
-  background: rgba(23, 29, 15, 0.82);
+  background: rgba(21, 25, 21, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(185, 154, 91, 0.25);
@@ -56,7 +55,7 @@
 }
 
 .glass-gold {
-  background: linear-gradient(135deg, rgba(185, 154, 91, 0.12) 0%, rgba(247, 244, 236, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(185, 154, 91, 0.12) 0%, rgba(250, 250, 248, 0.8) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(185, 154, 91, 0.35);
@@ -79,15 +78,15 @@
 
 /* Luxury Buttons */
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold px-7 py-3.5 font-bold tracking-wide text-charcoal transition-all duration-300 hover:bg-gold-light hover:shadow-lg hover:shadow-gold/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive;
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold px-7 py-3.5 font-bold tracking-wide text-[#1F241F] transition-all duration-300 hover:bg-gold-light hover:shadow-lg hover:shadow-gold/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F241F];
 }
 
 .btn-o {
-  @apply inline-flex items-center justify-center gap-2 rounded-full border border-ivory/80 px-7 py-3.5 font-medium tracking-wide text-ivory transition-all duration-300 hover:bg-ivory hover:text-olive hover:shadow-lg hover:shadow-ivory/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+  @apply inline-flex items-center justify-center gap-2 rounded-full border border-sand px-7 py-3.5 font-medium tracking-wide text-[#1F241F] bg-white transition-all duration-300 hover:border-gold hover:text-gold hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
 }
 
 .btn-d {
-  @apply inline-flex items-center justify-center gap-2 rounded-full bg-olive px-6 py-3 font-bold tracking-wide text-gold transition-all duration-300 hover:bg-olive-dark hover:text-gold-light hover:shadow-lg hover:shadow-olive/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#1F241F] px-6 py-3 font-bold tracking-wide text-white transition-all duration-300 hover:bg-black hover:text-gold-light hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
 }
 
 .btn-gold-outline {
@@ -96,11 +95,11 @@
 
 /* Luxury Input Field */
 .inp {
-  @apply w-full rounded-2xl border border-sand bg-white/90 px-4 py-3.5 text-charcoal outline-none transition-all duration-300 placeholder:text-charcoal/40 hover:border-gold/60 focus:border-gold focus:bg-white focus:ring-2 focus:ring-gold/30;
+  @apply w-full rounded-2xl border border-sand bg-white px-4 py-3.5 text-charcoal outline-none transition-all duration-300 placeholder:text-charcoal/40 hover:border-gold/60 focus:border-gold focus:bg-white focus:ring-2 focus:ring-gold/30;
 }
 
 .inp-dark {
-  @apply w-full rounded-2xl border border-gold/30 bg-olive-deep/70 px-4 py-3.5 text-ivory outline-none transition-all duration-300 placeholder:text-sand/50 hover:border-gold/70 focus:border-gold focus:bg-olive-deep focus:ring-2 focus:ring-gold/30;
+  @apply w-full rounded-2xl border border-gold/30 bg-[#151915] px-4 py-3.5 text-ivory outline-none transition-all duration-300 placeholder:text-sand/50 hover:border-gold/70 focus:border-gold focus:ring-2 focus:ring-gold/30;
 }
 
 /* Gold Glow Utility */
