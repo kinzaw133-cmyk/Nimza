@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { preloadImages } from "@/lib/imageCache";
 
 export const DEFAULT_CATEGORIES = [
@@ -139,14 +139,21 @@ export function useMenuQuery() {
     queryKey: ["menu_catalog"],
     queryFn: async () => {
       try {
-        const [catsRes, itemsRes] = await Promise.all([
-          supabase.from("categories").select("*").order("id"),
-          supabase.from("menu_items").select("*,categories(name)").order("id"),
-        ]);
-
         let cats = DEFAULT_CATEGORIES;
-        if (catsRes.data && catsRes.data.length > 0) {
-          cats = catsRes.data;
+        let items = DEFAULT_ITEMS;
+
+        // Only query Supabase when valid URL is present, preventing dead DNS/network wait
+        if (isSupabaseConfigured) {
+          const [catsRes, itemsRes] = await Promise.all([
+            supabase.from("categories").select("*").order("id"),
+            supabase.from("menu_items").select("*,categories(name)").order("id"),
+          ]);
+          if (catsRes.data && catsRes.data.length > 0) {
+            cats = catsRes.data;
+          }
+          if (itemsRes.data && itemsRes.data.length > 0) {
+            items = itemsRes.data;
+          }
         }
 
         let localOverride: any[] = [];
@@ -155,14 +162,11 @@ export function useMenuQuery() {
           if (stored) localOverride = JSON.parse(stored);
         } catch {}
 
-        let items: any[] = DEFAULT_ITEMS;
-        if (itemsRes.data && itemsRes.data.length > 0) {
-          items = itemsRes.data.map((dbItem: any) => {
+        if (localOverride.length > 0) {
+          items = items.map((dbItem: any) => {
             const override = localOverride.find((l) => l.id === dbItem.id);
             return override ? { ...dbItem, ...override } : dbItem;
           });
-        } else if (localOverride.length > 0) {
-          items = localOverride;
         }
 
         // Background preload all dish images into browser cache
@@ -183,8 +187,10 @@ export function useMenuQuery() {
     },
   });
 
-  // Listen for realtime Supabase changes to invalidate cache automatically
+  // Listen for realtime Supabase changes only when properly configured
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     const channel = supabase
       .channel("query-menu-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_items" }, () => {
@@ -219,6 +225,14 @@ export function useAdminOverviewQuery() {
     queryKey: ["admin_overview"],
     queryFn: async () => {
       try {
+        if (!isSupabaseConfigured) {
+          return {
+            orders: [],
+            reservations: [],
+            menuCount: { items: 14, categories: 4 },
+          };
+        }
+
         const [ordersRes, resRes, itemsCountRes, catsCountRes] = await Promise.all([
           supabase
             .from("orders")

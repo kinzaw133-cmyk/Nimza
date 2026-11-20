@@ -31,10 +31,9 @@ import {
   PlusCircle,
   X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth, clearSession } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
-import NimzaLogo from "@/components/NimzaLogo";
 
 export interface KitchenOrderItem {
   id?: number;
@@ -191,31 +190,37 @@ export default function KitchenDisplaySystem() {
   const loadOrders = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // 1. Fetch live orders with items and menu details
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          id,
-          user_id,
-          status,
-          total,
-          table_no,
-          payment_method,
-          payment_status,
-          notes,
-          created_at,
-          order_items (
+      // 1. Fetch live orders with items and menu details if Supabase is configured
+      let data: any = null;
+      let error: any = null;
+      if (isSupabaseConfigured) {
+        const res = await supabase
+          .from("orders")
+          .select(`
             id,
-            quantity,
-            customizations,
-            menu_items (
-              name,
-              price,
-              image_url
+            user_id,
+            status,
+            total,
+            table_no,
+            payment_method,
+            payment_status,
+            notes,
+            created_at,
+            order_items (
+              id,
+              quantity,
+              customizations,
+              menu_items (
+                name,
+                price,
+                image_url
+              )
             )
-          )
-        `)
-        .order("id", { ascending: false });
+          `)
+          .order("id", { ascending: false });
+        data = res.data;
+        error = res.error;
+      }
 
       // 2. Fetch local storage orders (offline & instant updates)
       let localOrders: any[] = [];
@@ -289,23 +294,26 @@ export default function KitchenDisplaySystem() {
   useEffect(() => {
     loadOrders();
 
-    // 1. Supabase Realtime Channel
-    const channel = supabase
-      .channel("nimza-kitchen-display-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        (payload: any) => {
-          if (payload.eventType === "INSERT") {
-            playChime("new");
-            toast(`🛎️ New Ticket #${payload.new.id} arrived on Kitchen Pass!`, "info");
-          } else if (payload.eventType === "UPDATE") {
-            playChime("advance");
+    // 1. Supabase Realtime Channel if configured
+    let channel: any = null;
+    if (isSupabaseConfigured) {
+      channel = supabase
+        .channel("nimza-kitchen-display-realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "orders" },
+          (payload: any) => {
+            if (payload.eventType === "INSERT") {
+              playChime("new");
+              toast(`🛎️ New Ticket #${payload.new.id} arrived on Kitchen Pass!`, "info");
+            } else if (payload.eventType === "UPDATE") {
+              playChime("advance");
+            }
+            loadOrders();
           }
-          loadOrders();
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    }
 
     // 2. Cross-tab and local window events
     const handleStorageUpdate = () => loadOrders();
@@ -319,7 +327,7 @@ export default function KitchenDisplaySystem() {
     }, 12000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
       window.removeEventListener("storage", handleStorageUpdate);
       window.removeEventListener("nimza_order_created", handleStorageUpdate);
       window.removeEventListener("nimza_order_updated", handleStorageUpdate);

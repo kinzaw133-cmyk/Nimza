@@ -131,14 +131,6 @@ export default function CustomerReviewsAdminPage() {
     status: "Approved" as "Approved" | "Pending" | "Hidden",
   });
 
-  // Client-side guard
-  useEffect(() => {
-    if (!loading && role !== "admin") {
-      toast("Access restricted: Administrator privileges required", "error");
-      router.replace("/");
-    }
-  }, [role, loading, router]);
-
   const loadReviews = async () => {
     setIsRefreshing(true);
     try {

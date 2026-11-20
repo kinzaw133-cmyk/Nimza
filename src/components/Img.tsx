@@ -10,6 +10,7 @@ interface ImgProps {
   className?: string;
   width?: number;
   priority?: boolean;
+  sizes?: string;
 }
 
 export default function Img({
@@ -18,6 +19,7 @@ export default function Img({
   className = "",
   width = 600,
   priority = false,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 }: ImgProps) {
   const optimizedSrc = getOptimizedImageUrl(src, width);
   const alreadyCached = isImageCached(src, width);
@@ -42,32 +44,34 @@ export default function Img({
         className={`grid place-items-center bg-[#1F241F]/10 border border-sand/40 text-gold/70 ${className}`}
         aria-label={alt}
       >
-        <Utensils size={28} className="opacity-50" />
+        <Utensils size={28} className="opacity-40" />
       </div>
     );
   }
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      {/* Shimmer Placeholder while loading */}
+      {/* Luxury Subtle Shimmer Placeholder while loading */}
       {!isLoaded && (
-        <div className="absolute inset-0 bg-sand/20 animate-pulse flex items-center justify-center">
-          <Utensils size={20} className="text-sand/40 opacity-40 animate-spin" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-sand/20 via-sand/40 to-sand/20 animate-pulse" />
       )}
 
       <img
         src={optimizedSrc}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
         decoding="async"
+        sizes={sizes}
         onLoad={() => {
           setIsLoaded(true);
           markImageCached(src, width);
         }}
         onError={() => setHasError(true)}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${
-          isLoaded ? "opacity-100" : "opacity-0"
+        className={`w-full h-full object-cover ${
+          alreadyCached
+            ? "opacity-100"
+            : `transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`
         }`}
       />
     </div>

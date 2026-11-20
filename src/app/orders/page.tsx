@@ -42,7 +42,7 @@ import {
   Compass,
   Star,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { useCart } from "@/components/Cart";
 import { toast } from "@/lib/notify";
@@ -157,7 +157,7 @@ export default function Orders() {
     setIsRefreshing(true);
     try {
       let dbOrders: any[] = [];
-      if (user?.id) {
+      if (user?.id && isSupabaseConfigured) {
         // Customer sees strictly their own orders
         const res = await supabase
           .from("orders")
@@ -222,51 +222,54 @@ export default function Orders() {
     loadOrders();
     syncDeliveryOrders();
 
-    // 1. Supabase Realtime Listener on 'orders' table
-    const channel = supabase
-      .channel("customer-orders-history-tracker")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-        },
-        (payload: any) => {
-          if (payload.eventType === "UPDATE") {
-            const updatedId = payload.new.id;
-            const newStatus = payload.new.status;
+    // 1. Supabase Realtime Listener on 'orders' table if configured
+    let channel: any = null;
+    if (isSupabaseConfigured) {
+      channel = supabase
+        .channel("customer-orders-history-tracker")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "orders",
+          },
+          (payload: any) => {
+            if (payload.eventType === "UPDATE") {
+              const updatedId = payload.new.id;
+              const newStatus = payload.new.status;
 
-            // Sound chime
-            playChime();
-            toast(`🛎️ Order #${updatedId} is now ${newStatus}!`, "info");
+              // Sound chime
+              playChime();
+              toast(`🛎️ Order #${updatedId} is now ${newStatus}!`, "info");
 
-            setOrders((prev) =>
-              prev.map((o) => (o.id === updatedId ? { ...o, status: newStatus } : o))
-            );
-
-            // Update modal if currently opened
-            setSelectedOrderForModal((curr: any) => {
-              if (curr && curr.id === updatedId) {
-                return { ...curr, status: newStatus };
-              }
-              return curr;
-            });
-
-            // Update localStorage
-            try {
-              const stored = JSON.parse(localStorage.getItem("nimza_placed_orders") || "[]");
-              const updated = stored.map((o: any) =>
-                o.id === updatedId ? { ...o, status: newStatus } : o
+              setOrders((prev) =>
+                prev.map((o) => (o.id === updatedId ? { ...o, status: newStatus } : o))
               );
-              localStorage.setItem("nimza_placed_orders", JSON.stringify(updated));
-            } catch {}
-          } else if (payload.eventType === "INSERT") {
-            loadOrders();
+
+              // Update modal if currently opened
+              setSelectedOrderForModal((curr: any) => {
+                if (curr && curr.id === updatedId) {
+                  return { ...curr, status: newStatus };
+                }
+                return curr;
+              });
+
+              // Update localStorage
+              try {
+                const stored = JSON.parse(localStorage.getItem("nimza_placed_orders") || "[]");
+                const updated = stored.map((o: any) =>
+                  o.id === updatedId ? { ...o, status: newStatus } : o
+                );
+                localStorage.setItem("nimza_placed_orders", JSON.stringify(updated));
+              } catch {}
+            } else if (payload.eventType === "INSERT") {
+              loadOrders();
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    }
 
     // 2. Custom storage & window event listener for cross-tab sync
     const handleStorageUpdate = () => {
@@ -279,7 +282,7 @@ export default function Orders() {
     window.addEventListener("storage", handleStorageUpdate);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
       window.removeEventListener("nimza_order_updated", handleStorageUpdate);
       window.removeEventListener("nimza_order_created", handleStorageUpdate);
       window.removeEventListener("nimza_delivery_orders_updated", handleStorageUpdate);

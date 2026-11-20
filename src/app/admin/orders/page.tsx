@@ -107,13 +107,6 @@ export default function AdminOrders() {
   };
 
   useEffect(() => {
-    if (loading) return;
-    if (role !== "admin") {
-      toast("Access restricted: Administrator privileges required", "error");
-      router.replace("/");
-      return;
-    }
-
     loadData();
 
     // Supabase Realtime channel for live order updates
@@ -294,7 +287,6 @@ export default function AdminOrders() {
               <RefreshCw size={14} />
               <span>Refresh Desk</span>
             </button>
-            <NimzaLogo variant="badge" size="sm" />
           </div>
         </div>
 

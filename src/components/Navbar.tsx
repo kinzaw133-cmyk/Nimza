@@ -116,10 +116,8 @@ export default function Navbar() {
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
           {/* Brand Logo */}
-          <Link href="/" className="group flex items-center gap-2 focus:outline-none">
-            <div className="relative rounded-xl bg-white p-1 border border-sand/80 shadow-sm transition-transform duration-300 group-hover:scale-105 group-hover:border-gold">
-              <NimzaLogo variant="header" size="sm" />
-            </div>
+          <Link href="/" className="group flex items-center gap-2 focus:outline-none transition-transform duration-300 hover:scale-105">
+            <NimzaLogo variant="header" size="sm" />
           </Link>
 
           {/* Desktop Primary Navigation Links: ONLY [Home, Menu, About, Gallery, Reservations] with Lucide Icons */}
@@ -387,7 +385,7 @@ export default function Navbar() {
           >
             {/* Top Seal */}
             <div className="flex justify-center mb-6">
-              <NimzaLogo variant="circle" size="md" />
+              <NimzaLogo variant="circle" size="md" inverted={true} />
             </div>
 
             {/* Primary 5 Links */}

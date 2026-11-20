@@ -33,6 +33,11 @@ module.exports = {
           light: "#EFECE6",
           dark: "#D6CFC3",
         },
+        wine: {
+          DEFAULT: "#9E2A2B",
+          light: "#C8322B",
+          dark: "#7A1C1D",
+        },
       },
       fontFamily: {
         serif: ["'Playfair Display'", "Georgia", "serif"],

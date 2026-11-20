@@ -1,0 +1,91 @@
+"use client";
+
+import React, { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth, UserRole } from "@/lib/useAuth";
+import { toast } from "@/lib/notify";
+import NimzaLogo from "@/components/NimzaLogo";
+import { Lock, ShieldAlert } from "lucide-react";
+
+interface RoleGuardProps {
+  children: React.ReactNode;
+  allowedRoles: UserRole[];
+  requiredRoleName?: string;
+  redirectTo?: string;
+  fallback?: React.ReactNode;
+}
+
+/**
+ * Enterprise Route Guard powered by TanStack Query & Next.js Navigation
+ * Provides instant 0ms routing, eliminates flickering, and guards authorized endpoints.
+ */
+export default function RoleGuard({
+  children,
+  allowedRoles,
+  requiredRoleName,
+  redirectTo,
+  fallback,
+}: RoleGuardProps) {
+  const { user, role, loading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const isAuthorized = role && allowedRoles.includes(role);
+
+  useEffect(() => {
+    if (!loading && !isAuthorized && !fallback) {
+      const targetRole = requiredRoleName || allowedRoles[0] || "admin";
+      const dest =
+        redirectTo ||
+        `/login?role=${encodeURIComponent(targetRole)}&redirect=${encodeURIComponent(
+          pathname || "/"
+        )}`;
+
+      toast(
+        `Restricted Access: ${targetRole.toUpperCase()} credentials required.`,
+        "error"
+      );
+      router.replace(dest);
+    }
+  }, [loading, isAuthorized, fallback, redirectTo, requiredRoleName, allowedRoles, pathname, router]);
+
+  // 1. Initial hydration loader (only rendered if no cached session exists in TanStack Query)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6 select-none">
+        <div className="w-16 h-16 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse">
+          <NimzaLogo variant="circle" size="sm" />
+        </div>
+        <p className="mt-4 font-serif text-lg text-[#1F241F] font-bold tracking-wide">
+          Verifying Security Credentials...
+        </p>
+        <span className="text-xs text-charcoal/60 mt-1">
+          Synchronizing via TanStack Query
+        </span>
+      </div>
+    );
+  }
+
+  // 2. Unauthorized with custom fallback (e.g. Admin Executive gate)
+  if (!isAuthorized) {
+    if (fallback) {
+      return <>{fallback}</>;
+    }
+
+    // Default unauthorized barrier while router redirects
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6 select-none">
+        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-300 text-rose-600 flex items-center justify-center mb-4 shadow-sm">
+          <ShieldAlert size={26} />
+        </div>
+        <h2 className="font-serif text-2xl font-bold text-[#1F241F]">Access Restricted</h2>
+        <p className="text-xs text-charcoal/60 mt-1 max-w-sm text-center">
+          Redirecting to authorized gastronomy authentication portal...
+        </p>
+      </div>
+    );
+  }
+
+  // 3. Authorized access granted with zero lag
+  return <>{children}</>;
+}

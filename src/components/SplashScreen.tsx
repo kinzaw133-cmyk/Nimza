@@ -25,21 +25,21 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
       }
     }
 
-    // Smooth percentage progression: 0% -> 100% over ~2.4 seconds
+    // Smooth, accelerated percentage progression (~900ms for instant premium response)
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           setTimeout(() => {
             triggerDismiss();
-          }, 350);
+          }, 150);
           return 100;
         }
-        // Slightly non-linear acceleration for natural feel
-        const step = prev < 30 ? 1.4 : prev < 70 ? 2.2 : 1.8;
+        // Slightly non-linear acceleration for natural fast feel
+        const step = prev < 30 ? 3.2 : prev < 70 ? 4.8 : 3.6;
         return Math.min(100, prev + step);
       });
-    }, 35);
+    }, 20);
 
     return () => clearInterval(interval);
   }, [forceShow]);
@@ -52,7 +52,7 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
     setTimeout(() => {
       setIsVisible(false);
       onComplete?.();
-    }, 700);
+    }, 400);
   };
 
   const handleSkip = () => {
@@ -142,7 +142,7 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
                   times: [0, 0.35, 0.7, 1],
                   ease: "easeInOut",
                 }}
-                className="absolute inset-4 overflow-hidden bg-[#FAF7F0] border-2 border-gold/60 shadow-2xl flex items-center justify-center p-3"
+                className="absolute inset-4 overflow-hidden bg-transparent border-2 border-gold/50 shadow-[0_0_35px_rgba(185,154,91,0.25)] flex items-center justify-center p-3"
               >
                 {/* 1. LOGO REVEAL: GRADUALLY APPEARS WITH BLUR & OPACITY */}
                 <motion.div
@@ -150,12 +150,12 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
                     filter: `blur(${blurAmount}px)`,
                     opacity: logoOpacity,
                   }}
-                  className="w-full h-full flex items-center justify-center"
+                  className="w-full h-full flex items-center justify-center bg-transparent"
                 >
                   <img
-                    src="/logo-footer.jpg"
+                    src="/logo-light.png"
                     alt="Nimza Restaurant Logo"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain bg-transparent drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
                   />
                 </motion.div>
               </motion.div>

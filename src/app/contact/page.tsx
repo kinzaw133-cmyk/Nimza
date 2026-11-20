@@ -73,7 +73,7 @@ export default function Contact() {
                   </span>
                   <h3 className="font-serif text-2xl font-bold text-ivory mt-0.5">Nimza Gastronomy</h3>
                 </div>
-                <NimzaLogo variant="monogram" size="sm" />
+                <NimzaLogo variant="monogram" size="sm" inverted={true} />
               </div>
 
               <div className="space-y-6 text-sm">

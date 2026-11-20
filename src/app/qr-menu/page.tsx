@@ -25,12 +25,16 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import dynamic from "next/dynamic";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useCart, FoodCustomization } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
-import FoodCustomizationModal from "@/components/FoodCustomizationModal";
+
+const FoodCustomizationModal = dynamic(() => import("@/components/FoodCustomizationModal"), {
+  ssr: false,
+});
 
 const DEFAULT_CATEGORIES = [
   { id: 1, name: "Starters" },
@@ -202,10 +206,11 @@ function QRMenuContent() {
     }
   }, [rawTableParam]);
 
-  // Load latest live menu items from Supabase
+  // Load latest live menu items from Supabase if configured
   useEffect(() => {
     let isMounted = true;
     async function loadMenu() {
+      if (!isSupabaseConfigured) return;
       try {
         const { data: catData } = await supabase.from("categories").select("*").order("id");
         if (catData && catData.length > 0 && isMounted) setCategories(catData);

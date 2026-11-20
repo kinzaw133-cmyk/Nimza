@@ -17,41 +17,41 @@ interface VariantDetail {
 const VARIANTS: VariantDetail[] = [
   {
     id: "header",
-    name: "The Grand Monogram",
-    tagline: "Serif 'N' with Golden Botanical Laurel",
-    desc: "The primary brand mark featuring a high-contrast Roman serif 'N' intertwined with a hand-rendered antique gold olive branch.",
+    name: "The Retro Hearth Brandmark",
+    tagline: "Vintage Rounded Serif with Steaming Bowl & Gold Swirl",
+    desc: "The primary brand mark featuring bold, organic rounded serif lettering for 'Nimza' paired with the steaming charcoal cloche and luxury gold steam swirl.",
     bestFor: "Navigation headers, menus, luxury invitations, storefront facade",
     previewBg: "bg-ivory",
   },
   {
     id: "circle",
-    name: "The Royal Gastronomy Seal",
-    tagline: "Circular Double Ring with Cutlery Crest",
-    desc: "Emblematic circular stamp embracing artisan fork & spoon utensils with a flourishing botanical wreath, symbolizing warm culinary craft.",
+    name: "The Kitchen Seal of Craft",
+    tagline: "Circular Gold Dual-Ring with Hearth Crest",
+    desc: "Emblematic circular stamp embracing the steaming bowl with heart cutout and gold steam swirl, symbolizing warm gastronomy from kitchen to table.",
     bestFor: "Wax stamps, wine labels, reservation confirmation seals, chef certificates",
     previewBg: "bg-olive-deep",
   },
   {
     id: "pebble",
-    name: "The Organic Pebble Badge",
-    tagline: "Deep Olive Silhouette with Ivory Script",
-    desc: "An organic pebble-shaped badge capturing the earthiness of olive groves with a warm ribbon flourish and botanical branch.",
+    name: "The Hearth Emblem",
+    tagline: "Complete Signature with Kitchen Tagline",
+    desc: "The full signature mark featuring the steaming bowl, 'Nimza', '· RESTAURANT ·', and 'From our kitchen to your table. ♡'",
     bestFor: "Footer signature, packaging bags, coaster emblems, staff aprons",
     previewBg: "bg-sand-light",
   },
   {
     id: "badge",
-    name: "The Triple-Star Emblem",
-    tagline: "Fine Dining & Lounge Heraldry",
-    desc: "Curated luxury shield highlighting culinary excellence, three gold stars, and pristine balanced typography.",
+    name: "The Triple-Star Hearth Shield",
+    tagline: "Fine Dining & Kitchen Heraldry",
+    desc: "Curated luxury shield highlighting culinary excellence, the steaming cloche mark, three gold stars, and pristine balanced typography.",
     bestFor: "VIP membership cards, awards showcase, private dining suites",
     previewBg: "bg-olive-muted",
   },
   {
     id: "monogram",
-    name: "Pure Monogram Stamp",
-    tagline: "Iconic 'N' Botanical Mark",
-    desc: "The distilled essence of Nimza: a bold sculpted capital letter crowned with the golden sprig of patience and nature.",
+    name: "The Steaming 'N' Stamp",
+    tagline: "Iconic 'N' Hearth Mark",
+    desc: "The distilled essence of Nimza: a bold sculpted retro capital letter crowned with the steaming bowl and golden swirl of hospitality.",
     bestFor: "Favicons, mobile app icons, napkin embossing, watermarks",
     previewBg: "bg-ivory-soft",
   },
@@ -155,7 +155,7 @@ export default function LogoShowcase() {
                   className="flex flex-col items-center justify-center"
                 >
                   <div className="p-6 rounded-3xl transition-transform duration-500 hover:scale-105">
-                    <NimzaLogo variant={selected} size="xl" />
+                    <NimzaLogo variant={selected} size="xl" inverted={bgMode !== "ivory"} />
                   </div>
                 </motion.div>
               </AnimatePresence>

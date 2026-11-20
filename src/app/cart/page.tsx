@@ -32,12 +32,16 @@ import {
   Crown,
   X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import dynamic from "next/dynamic";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useCart, FoodCustomization } from "@/components/Cart";
 import { toast } from "@/lib/notify";
 import Img from "@/components/Img";
 import NimzaLogo from "@/components/NimzaLogo";
-import FoodCustomizationModal from "@/components/FoodCustomizationModal";
+
+const FoodCustomizationModal = dynamic(() => import("@/components/FoodCustomizationModal"), {
+  ssr: false,
+});
 import {
   getStoredDeliveryOrders,
   saveStoredDeliveryOrders,
@@ -230,29 +234,31 @@ export default function Cart() {
 
       let generatedOrderId = Math.floor(1000 + Math.random() * 9000);
 
-      // 3. Save order into Supabase
-      try {
-        const res = await supabase.from("orders").insert(orderPayload).select().single();
-        if (res.data?.id) generatedOrderId = res.data.id;
-      } catch (e) {
-        // Fallback if payment_status column does not exist on remote DB
-        delete orderPayload.payment_status;
+      // 3. Save order into Supabase if configured
+      if (isSupabaseConfigured) {
         try {
           const res = await supabase.from("orders").insert(orderPayload).select().single();
           if (res.data?.id) generatedOrderId = res.data.id;
+        } catch (e) {
+          // Fallback if payment_status column does not exist on remote DB
+          delete orderPayload.payment_status;
+          try {
+            const res = await supabase.from("orders").insert(orderPayload).select().single();
+            if (res.data?.id) generatedOrderId = res.data.id;
+          } catch {}
+        }
+
+        // 4. Save order items into Supabase
+        try {
+          const orderItemsRows = items.map((x: any) => ({
+            order_id: generatedOrderId,
+            menu_item_id: x.id,
+            quantity: x.qty,
+            customizations: formatCustomizationSummary(x.customization),
+          }));
+          await supabase.from("order_items").insert(orderItemsRows);
         } catch {}
       }
-
-      // 4. Save order items into Supabase
-      try {
-        const orderItemsRows = items.map((x: any) => ({
-          order_id: generatedOrderId,
-          menu_item_id: x.id,
-          quantity: x.qty,
-          customizations: formatCustomizationSummary(x.customization),
-        }));
-        await supabase.from("order_items").insert(orderItemsRows);
-      } catch {}
 
       // 5. Store in localStorage for instant live synchronization
       const newOrderRecord = {

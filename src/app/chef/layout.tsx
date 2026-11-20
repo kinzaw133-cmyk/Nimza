@@ -1,18 +1,16 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import React from "react";
+import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function ChefLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Server-side check for Chef page: only 'chef' (or 'admin') allowed
-  const cookieStore = cookies();
-  const role = cookieStore.get("sb-user-role")?.value;
-
-  if (role !== "chef" && role !== "admin") {
-    redirect("/login?role=chef");
-  }
-
-  return <>{children}</>;
+  return (
+    <RoleGuard allowedRoles={["chef", "admin"]} requiredRoleName="chef">
+      {children}
+    </RoleGuard>
+  );
 }

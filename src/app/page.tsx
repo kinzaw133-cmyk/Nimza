@@ -23,7 +23,7 @@ import Img from "@/components/Img";
 import SplashScreen from "@/components/SplashScreen";
 import LogoShowcase from "@/components/LogoShowcase";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useCart } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
 import { toast } from "@/lib/notify";
@@ -125,6 +125,7 @@ export default function Home() {
     );
 
     const fetchFeatured = async () => {
+      if (!isSupabaseConfigured) return;
       try {
         const { data } = await supabase
           .from("menu_items")
@@ -141,6 +142,7 @@ export default function Home() {
     fetchFeatured();
 
     const fetchReviews = async () => {
+      if (!isSupabaseConfigured) return;
       try {
         const { data, error } = await supabase
           .from("reviews")
@@ -254,7 +256,7 @@ export default function Home() {
               </div>
 
               {/* Floating Decorative Brand Seal */}
-              <div className="absolute -bottom-6 -left-6 rounded-full p-2 bg-white shadow-xl border border-sand">
+              <div className="absolute -bottom-6 -left-6 rounded-full p-1 bg-transparent drop-shadow-xl">
                 <NimzaLogo variant="circle" size="md" />
               </div>
             </div>

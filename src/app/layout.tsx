@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import dynamic from "next/dynamic";
 import { CartProvider } from "@/components/Cart";
 import { WishlistProvider } from "@/components/Wishlist";
 import QueryProvider from "@/providers/QueryProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import VoiceAssistant from "@/components/VoiceAssistant";
+
+// Lazy-load VoiceAssistant on client to eliminate ~50KB from critical first-load bundle
+const VoiceAssistant = dynamic(() => import("@/components/VoiceAssistant"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "Nimza Restaurant & Lounge — Fine Dining & Gastronomy",
@@ -28,7 +33,7 @@ export const metadata: Metadata = {
     siteName: "Nimza",
     images: [
       {
-        url: "/logo-header.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Nimza Restaurant",
@@ -53,7 +58,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/logo-circle.jpg" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/logo-circle.png" />
+        <link rel="apple-touch-icon" href="/logo-circle.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

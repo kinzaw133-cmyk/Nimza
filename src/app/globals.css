@@ -81,6 +81,10 @@
   @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold px-7 py-3.5 font-bold tracking-wide text-[#1F241F] transition-all duration-300 hover:bg-gold-light hover:shadow-lg hover:shadow-gold/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F241F];
 }
 
+.btn-hero {
+  @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#C8322B] px-7 py-3.5 font-bold tracking-wide text-white transition-all duration-300 hover:bg-[#A82822] hover:shadow-lg hover:shadow-[#C8322B]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+}
+
 .btn-o {
   @apply inline-flex items-center justify-center gap-2 rounded-full border border-sand px-7 py-3.5 font-medium tracking-wide text-[#1F241F] bg-white transition-all duration-300 hover:border-gold hover:text-gold hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
 }

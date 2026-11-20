@@ -144,14 +144,6 @@ export default function AdminMenuPage() {
 
   const formSectionRef = useRef<HTMLDivElement>(null);
 
-  // Client-side guard (defense-in-depth with layout)
-  useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      toast("Access restricted: Administrator privileges required", "error");
-      router.replace("/");
-    }
-  }, [isAdmin, authLoading, router]);
-
   // Load Categories & Items from Supabase with localStorage synchronization
   const loadData = useCallback(async () => {
     setIsLoadingData(true);
@@ -694,9 +686,6 @@ export default function AdminMenuPage() {
             <p className="text-xs sm:text-sm text-charcoal/70 mt-1 max-w-2xl leading-relaxed">
               Add and edit food dishes, manage imagery, specify ingredient lists, toggle availability in real-time, and organize into courses.
             </p>
-          </div>
-          <div className="shrink-0">
-            <NimzaLogo variant="badge" size="sm" />
           </div>
         </div>
 

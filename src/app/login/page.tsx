@@ -21,12 +21,14 @@ import {
   Lock,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useAuth, setTestSession, clearSession } from "@/lib/useAuth";
+import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
 
 export default function Login() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, role } = useAuth();
 
   const [isRegister, setIsRegister] = useState(false);
@@ -69,11 +71,10 @@ export default function Login() {
 
         // Default role is customer
         document.cookie = `sb-user-role=customer; path=/; max-age=604800; SameSite=Lax`;
+        queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: "customer" });
         toast("VIP Membership Account Created. Welcome to Nimza.", "success");
 
-        setTimeout(() => {
-          window.location.href = targetRedirect || "/";
-        }, 800);
+        router.replace(targetRedirect || "/");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: form.email,
@@ -85,7 +86,7 @@ export default function Login() {
           return;
         }
 
-        let userRole = "customer";
+        let userRole: "customer" | "chef" | "admin" | "delivery" = "customer";
         try {
           if (data.user) {
             const { data: p } = await supabase
@@ -98,21 +99,20 @@ export default function Login() {
         } catch {}
 
         document.cookie = `sb-user-role=${userRole}; path=/; max-age=604800; SameSite=Lax`;
+        queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: userRole });
         toast(`Welcome back to Nimza (${userRole.toUpperCase()}).`, "success");
 
-        setTimeout(() => {
-          if (targetRedirect) {
-            window.location.href = targetRedirect;
-          } else if (userRole === "admin") {
-            window.location.href = "/admin";
-          } else if (userRole === "chef") {
-            window.location.href = "/chef";
-          } else if (userRole === "delivery") {
-            window.location.href = "/driver";
-          } else {
-            window.location.href = "/";
-          }
-        }, 800);
+        const dest =
+          targetRedirect ||
+          (userRole === "admin"
+            ? "/admin"
+            : userRole === "chef"
+            ? "/chef"
+            : userRole === "delivery"
+            ? "/driver"
+            : "/");
+
+        router.replace(dest);
       }
     } catch (err: any) {
       toast(err.message || "Authentication error", "error");
@@ -121,7 +121,7 @@ export default function Login() {
     }
   }
 
-  // Quick 1-click test role login
+  // Quick 1-click test role login with instant TanStack Query cache synchronization
   const handleQuickLogin = (targetRole: "admin" | "chef" | "customer" | "delivery") => {
     const config = {
       admin: {
@@ -147,16 +147,24 @@ export default function Login() {
     }[targetRole];
 
     setTestSession(targetRole, config.email, config.name);
+    queryClient.setQueryData(AUTH_QUERY_KEY, {
+      user: {
+        id: `test-${targetRole}`,
+        email: config.email,
+        role: targetRole,
+        user_metadata: { full_name: config.name },
+      },
+      role: targetRole,
+    });
     toast(`Authenticated as ${targetRole.toUpperCase()}`, "success");
 
-    setTimeout(() => {
-      window.location.href = config.dest;
-    }, 600);
+    router.replace(config.dest);
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     clearSession();
+    queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Signed out successfully", "info");
   };
 
@@ -193,7 +201,7 @@ export default function Login() {
         <div className="rounded-[2.5rem] bg-white border border-sand/80 shadow-2xl p-8 md:p-10 relative overflow-hidden backdrop-blur-md">
           {/* Logo Seal */}
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-[#FAFAF8] p-1.5 border border-sand/80 shadow-xs flex items-center justify-center mb-3">
+            <div className="mb-3 flex items-center justify-center">
               <NimzaLogo variant="circle" size="md" />
             </div>
             <h1 className="font-serif text-3xl font-bold text-[#1F241F] tracking-tight">

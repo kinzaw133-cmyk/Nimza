@@ -33,7 +33,8 @@ import {
   Ticket,
   MapPin,
 } from "lucide-react";
-import { useAuth, setTestSession, clearSession } from "@/lib/useAuth";
+import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
@@ -129,6 +130,7 @@ const NAV_ITEMS: NavItem[] = [
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, role, loading, isAdmin } = useAuth();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -177,11 +179,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const handle1ClickAdmin = () => {
     setTestSession("admin", "admin@nimza.example", "General Manager & Admin");
+    queryClient.setQueryData(AUTH_QUERY_KEY, {
+      user: {
+        id: "test-admin",
+        email: "admin@nimza.example",
+        role: "admin",
+        user_metadata: { full_name: "General Manager & Admin" },
+      },
+      role: "admin",
+    });
     toast("Executive Administrator access granted", "success");
     playChime();
-    setTimeout(() => {
-      window.location.reload();
-    }, 400);
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -196,7 +204,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         toast(error.message, "error");
         return;
       }
-      let userRole = "customer";
+      let userRole: "customer" | "chef" | "admin" | "delivery" = "customer";
       if (data.user) {
         const { data: p } = await supabase
           .from("profiles")
@@ -207,8 +215,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       }
       document.cookie = `sb-user-role=${userRole}; path=/; max-age=604800; SameSite=Lax`;
       if (userRole === "admin") {
+        queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: "admin" });
         toast("Administrator verified successfully", "success");
-        window.location.reload();
       } else {
         toast("Account does not have administrator privileges", "error");
       }
@@ -222,16 +230,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     clearSession();
+    queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Administrator signed out", "info");
-    window.location.href = "/";
+    router.push("/");
   };
 
   // 1. Loading screen
   if (loading) {
     return (
       <div className="min-h-screen bg-[#1F241F] text-ivory flex flex-col items-center justify-center p-6">
-        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-gold/30 p-2 flex items-center justify-center animate-pulse">
-          <NimzaLogo variant="badge" size="sm" />
+        <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/30 p-2 flex items-center justify-center animate-pulse">
+          <NimzaLogo variant="badge" size="sm" inverted={true} />
         </div>
         <p className="mt-4 font-serif text-lg text-gold font-medium tracking-wide">
           Authenticating Nimza Executive Suite...
@@ -252,8 +261,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <div className="rounded-[2.5rem] bg-[#141814]/90 border border-gold/40 shadow-2xl p-8 md:p-10 backdrop-blur-md">
             {/* Logo */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-20 h-20 rounded-2xl bg-white p-2 border border-gold shadow-md flex items-center justify-center mb-3">
-                <NimzaLogo variant="badge" size="md" />
+              <div className="w-16 h-16 rounded-2xl bg-gold/15 p-2 border border-gold/50 shadow-md flex items-center justify-center mb-3">
+                <NimzaLogo variant="badge" size="md" inverted={true} />
               </div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-2">
                 <Lock size={12} />
@@ -364,8 +373,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           {/* Brand Seal Header */}
           <div className="p-6 border-b border-white/10">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-2xl bg-white p-1 border border-gold/50 shadow-sm flex items-center justify-center transition-transform group-hover:scale-105">
-                <NimzaLogo variant="badge" size="sm" />
+              <div className="w-11 h-11 rounded-2xl bg-gold/15 p-1.5 border border-gold/40 shadow-sm flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
+                <NimzaLogo variant="badge" size="sm" inverted={true} />
               </div>
               <div>
                 <span className="font-serif text-lg font-bold text-ivory tracking-tight group-hover:text-gold transition-colors block">
@@ -512,8 +521,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div>
                 <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white p-1 border border-gold/50 flex items-center justify-center">
-                      <NimzaLogo variant="badge" size="sm" />
+                    <div className="w-10 h-10 rounded-xl bg-gold/15 p-1 border border-gold/40 flex items-center justify-center shrink-0">
+                      <NimzaLogo variant="badge" size="sm" inverted={true} />
                     </div>
                     <div>
                       <span className="font-serif font-bold text-base text-ivory block">

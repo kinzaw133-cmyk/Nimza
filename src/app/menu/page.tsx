@@ -27,12 +27,17 @@ import { supabase } from "@/lib/supabase";
 import { useCart, FoodCustomization } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
 import { useAuth } from "@/lib/useAuth";
+import dynamic from "next/dynamic";
 import Img from "@/components/Img";
 import { toast } from "@/lib/notify";
 import { BotanicalLeafSvg } from "@/components/NimzaLogo";
-import FoodCustomizationModal from "@/components/FoodCustomizationModal";
 import AiRecommendations from "@/components/AiRecommendations";
 import { useMenuQuery } from "@/lib/queryHooks";
+
+// Lazy-load modal to reduce initial page weight
+const FoodCustomizationModal = dynamic(() => import("@/components/FoodCustomizationModal"), {
+  ssr: false,
+});
 
 export default function Menu() {
   const { add } = useCart();

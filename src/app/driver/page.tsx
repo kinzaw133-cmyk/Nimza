@@ -41,7 +41,6 @@ import {
   DEFAULT_DELIVERY_ORDERS,
 } from "@/lib/delivery/deliveryTypes";
 import LiveDeliveryMap from "@/components/LiveDeliveryMap";
-import NimzaLogo from "@/components/NimzaLogo";
 
 export default function DeliveryDriverPortal() {
   const { user, role, loading } = useAuth();

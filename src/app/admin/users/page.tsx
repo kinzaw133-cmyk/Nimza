@@ -39,14 +39,6 @@ export default function UsersManagementPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  // Client-side guard
-  useEffect(() => {
-    if (!loading && role !== "admin") {
-      toast("Access restricted: Administrator privileges required", "error");
-      router.replace("/");
-    }
-  }, [role, loading, router]);
-
   const loadProfiles = async () => {
     setIsRefreshing(true);
     try {
@@ -217,7 +209,6 @@ export default function UsersManagementPage() {
               <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
               <span>Refresh Users</span>
             </button>
-            <NimzaLogo variant="badge" size="sm" />
           </div>
         </div>
 

@@ -148,14 +148,6 @@ export default function AdminTablesPage() {
   const { user, role, loading } = useAuth();
   const router = useRouter();
 
-  // Client-side guard
-  useEffect(() => {
-    if (!loading && role !== "admin") {
-      toast("Access restricted: Administrator privileges required", "error");
-      router.replace("/");
-    }
-  }, [role, loading, router]);
-
   const [tables, setTables] = useState<AdminTable[]>(DEFAULT_ADMIN_TABLES);
   const [reservations, setReservations] = useState<AdminReservation[]>(DEFAULT_ADMIN_RESERVATIONS);
   const [activeSectionFilter, setActiveSectionFilter] = useState<string>("All");

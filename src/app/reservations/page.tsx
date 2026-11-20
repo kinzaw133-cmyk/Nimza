@@ -34,7 +34,7 @@ import {
   ArrowRight,
   RefreshCw,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
@@ -263,7 +263,7 @@ export default function ReservationsPage() {
       }
     } catch {}
 
-    if (user?.id) {
+    if (user?.id && isSupabaseConfigured) {
       try {
         const { data, error } = await supabase
           .from("reservations")
@@ -381,29 +381,31 @@ export default function ReservationsPage() {
       setSavedProfile(profileToSave);
     } catch {}
 
-    // 2. Persist to Supabase
-    try {
-      await supabase.from("reservations").insert({
-        id: reservationId,
-        user_id: user?.id || null,
-        name: newBooking.name,
-        phone: newBooking.phone,
-        email: newBooking.email,
-        table_no: newBooking.table_no,
-        guests: newBooking.guests,
-        reserved_at: newBooking.reserved_at,
-        notes: newBooking.notes,
-        package_type: newBooking.package_type,
-        package_name: newBooking.package_name,
-        package_price: newBooking.package_price,
-        status: newBooking.status,
-        booking_type: newBooking.booking_type,
-        qr_code: newBooking.qr_code,
-        reminder_opt_in: newBooking.reminder_opt_in,
-        waitlist_position: newBooking.waitlist_position,
-      });
-    } catch {
-      // Local fallback
+    // 2. Persist to Supabase if configured
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("reservations").insert({
+          id: reservationId,
+          user_id: user?.id || null,
+          name: newBooking.name,
+          phone: newBooking.phone,
+          email: newBooking.email,
+          table_no: newBooking.table_no,
+          guests: newBooking.guests,
+          reserved_at: newBooking.reserved_at,
+          notes: newBooking.notes,
+          package_type: newBooking.package_type,
+          package_name: newBooking.package_name,
+          package_price: newBooking.package_price,
+          status: newBooking.status,
+          booking_type: newBooking.booking_type,
+          qr_code: newBooking.qr_code,
+          reminder_opt_in: newBooking.reminder_opt_in,
+          waitlist_position: newBooking.waitlist_position,
+        });
+      } catch {
+        // Local fallback
+      }
     }
 
     // 3. Persist to localStorage
@@ -1141,7 +1143,7 @@ export default function ReservationsPage() {
                     </span>
                     <h3 className="font-serif text-xl font-bold text-ivory mt-0.5">Nimza Gastronomy</h3>
                   </div>
-                  <NimzaLogo variant="circle" size="sm" />
+                  <NimzaLogo variant="circle" size="sm" inverted={true} />
                 </div>
 
                 <div className="space-y-3.5 text-xs">
