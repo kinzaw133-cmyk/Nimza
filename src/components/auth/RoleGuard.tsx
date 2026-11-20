@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth, UserRole } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
@@ -26,14 +26,19 @@ export default function RoleGuard({
   redirectTo,
   fallback,
 }: RoleGuardProps) {
+  const [mounted, setMounted] = useState(false);
   const { user, role, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isAuthorized = role && allowedRoles.includes(role);
 
   useEffect(() => {
-    if (!loading && !isAuthorized && !fallback) {
+    if (mounted && !loading && !isAuthorized && !fallback) {
       const targetRole = requiredRoleName || allowedRoles[0] || "admin";
       const dest =
         redirectTo ||
@@ -47,10 +52,10 @@ export default function RoleGuard({
       );
       router.replace(dest);
     }
-  }, [loading, isAuthorized, fallback, redirectTo, requiredRoleName, allowedRoles, pathname, router]);
+  }, [mounted, loading, isAuthorized, fallback, redirectTo, requiredRoleName, allowedRoles, pathname, router]);
 
-  // 1. Initial hydration loader (only rendered if no cached session exists in TanStack Query)
-  if (loading) {
+  // 1. Initial hydration loader (matches server and client perfectly before mount)
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6 select-none">
         <div className="w-16 h-16 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse">

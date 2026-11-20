@@ -52,7 +52,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full bg-[#FAF9F5] text-[#1F241F] select-none border-t border-sand/80 font-sans">
+    <footer id="footer-section" className="w-full bg-[#FAF9F5] text-[#1F241F] select-none border-t border-sand/80 font-sans">
       {/* ========================================================================= */}
       {/* 1. 30-MINUTE FAST GOURMET DELIVERY & LIVE RADAR BANNER (HERO THEME MATCH) */}
       {/* ========================================================================= */}

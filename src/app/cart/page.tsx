@@ -31,6 +31,9 @@ import {
   Ticket,
   Crown,
   X,
+  Users,
+  Share2,
+  Copy,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";

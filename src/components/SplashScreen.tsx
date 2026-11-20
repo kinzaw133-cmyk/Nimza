@@ -76,7 +76,7 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.03 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#111611] text-ivory select-none overflow-hidden"
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#1F241F] text-ivory select-none overflow-hidden"
         >
           {/* Subtle Ambient Radial Glow */}
           <div className="absolute inset-0 pointer-events-none">

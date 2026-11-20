@@ -5,6 +5,7 @@
 @layer base {
   html {
     color-scheme: light;
+    scroll-behavior: smooth;
   }
   body {
     background-color: #FAFAF8;
@@ -25,15 +26,15 @@
     width: 9px;
   }
   ::-webkit-scrollbar-track {
-    background: #1F241F;
+    background: #FAF9F5;
   }
   ::-webkit-scrollbar-thumb {
     background: #B99A5B;
     border-radius: 9999px;
-    border: 2px solid #1F241F;
+    border: 2px solid #FAF9F5;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #D8BF83;
+    background: #A6884A;
   }
 }
 
@@ -114,6 +115,27 @@
 .border-gold-glow {
   border-color: rgba(185, 154, 91, 0.4);
   box-shadow: 0 0 20px rgba(185, 154, 91, 0.15);
+}
+
+/* Luxury Infinite Scrolling Marquee */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -549,9 +549,9 @@ export default function KitchenDisplaySystem() {
   }).length;
 
   return (
-    <div className="min-h-screen bg-[#111613] text-[#F3F4F1] flex flex-col select-none font-sans antialiased overflow-x-hidden">
-      {/* KDS TOP COMMAND DECK (HIGH VISIBILITY FOR KITCHEN MONITORS) */}
-      <header className="sticky top-0 z-40 bg-[#161D18] border-b border-[#2C382F] px-4 sm:px-6 py-3.5 shadow-xl">
+    <div className="min-h-screen bg-[#1F241F] text-[#F3F4F1] flex flex-col select-none font-sans antialiased overflow-x-hidden">
+      {/* KDS TOP COMMAND DECK (HIGH VISIBILITY FOR KITCHEN MONITORS - HERO THEME MATCH) */}
+      <header className="sticky top-0 z-40 bg-[#171B17] border-b border-sand/20 px-4 sm:px-6 py-3.5 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Left: Station Identity & Live Connection Status */}
           <div className="flex items-center gap-3.5 flex-wrap">

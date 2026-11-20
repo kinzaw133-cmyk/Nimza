@@ -17,12 +17,14 @@ import {
   PhoneCall,
   ChefHat,
   Heart,
+  Flame,
 } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
 import Img from "@/components/Img";
 import SplashScreen from "@/components/SplashScreen";
 import LogoShowcase from "@/components/LogoShowcase";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
+import ScrollNavigator from "@/components/ScrollNavigator";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useCart } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
@@ -65,6 +67,10 @@ const METRICS = [
   { icon: Wine, label: "Wine Cellar", value: "120+ Grand Crus" },
   { icon: UtensilsCrossed, label: "Philosophy", value: "100% Farm to Table" },
   { icon: Clock, label: "Preparation", value: "Slow Cooked Patience" },
+  { icon: Flame, label: "Wood-Fired Craft", value: "Cherrywood Embers" },
+  { icon: Sparkles, label: "Heritage Butchery", value: "48-Hour Dry-Aged Cuts" },
+  { icon: Star, label: "Culinary Craft", value: "Umbrian Black Truffles" },
+  { icon: ChefHat, label: "Executive Kitchen", value: "Chef Elias Varga" },
 ];
 
 const DEFAULT_GUEST_REVIEWS = [
@@ -192,28 +198,65 @@ export default function Home() {
       <SplashScreen />
 
       <main className="bg-[#FAFAF8] text-charcoal overflow-hidden">
+        {/* Animated Right-Rail Scrollbar Navigator */}
+        <ScrollNavigator />
+
         {/* Cinematic Hero Slider */}
         <HeroSlider />
 
-        {/* Brand Accolades Ribbon */}
-        <section className="bg-[#1F241F] text-ivory py-9 px-6 border-y border-sand/30 shadow-inner">
-          <div className="mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-6">
-            {METRICS.map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-center gap-4 justify-center text-center sm:text-left">
-                <div className="p-3 rounded-2xl bg-gold/15 border border-gold/30 text-gold shrink-0">
-                  <Icon size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-sans tracking-[0.25em] text-sand/70 uppercase font-semibold">{label}</p>
-                  <p className="font-serif text-lg md:text-xl font-bold text-ivory mt-0.5">{value}</p>
-                </div>
-              </div>
-            ))}
+        {/* ======================================================== */}
+        {/* BRAND ACCOLADES SCROLLING TICKER / MARQUEE (ANIMATED)    */}
+        {/* ======================================================== */}
+        <section
+          aria-label="Restaurant Accolades & Accreditations"
+          className="relative bg-[#1F241F] text-ivory py-7 sm:py-8 border-y border-sand/30 shadow-inner overflow-hidden select-none"
+        >
+          {/* Subtle Ambient Radial Pattern */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[radial-gradient(#B99A5B_1px,transparent_1px)] [background-size:28px_28px]" />
+
+          {/* Left Feathered Edge Fade Mask */}
+          <div className="pointer-events-none absolute left-0 inset-y-0 w-24 sm:w-44 bg-gradient-to-r from-[#1F241F] via-[#1F241F]/90 to-transparent z-10" />
+
+          {/* Right Feathered Edge Fade Mask */}
+          <div className="pointer-events-none absolute right-0 inset-y-0 w-24 sm:w-44 bg-gradient-to-l from-[#1F241F] via-[#1F241F]/90 to-transparent z-10" />
+
+          {/* Infinite Smooth Scrolling Track */}
+          <div className="flex overflow-hidden">
+            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0">
+              {[...METRICS, ...METRICS].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={`${item.label}-${index}`}
+                    className="flex items-center gap-10 sm:gap-14 shrink-0 group cursor-default"
+                  >
+                    <div className="flex items-center gap-4 py-1.5 px-3 rounded-2xl transition-all duration-300 group-hover:bg-white/5">
+                      <div className="p-3 rounded-2xl bg-gold/15 border border-gold/30 text-gold shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:bg-gold/25 group-hover:border-gold shadow-xs">
+                        <Icon size={22} />
+                      </div>
+                      <div className="whitespace-nowrap">
+                        <p className="text-[10px] font-sans tracking-[0.25em] text-sand/70 uppercase font-semibold">
+                          {item.label}
+                        </p>
+                        <p className="font-serif text-lg md:text-xl font-bold text-ivory mt-0.5 group-hover:text-gold transition-colors">
+                          {item.value}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Luxury Separator Diamond */}
+                    <div className="text-gold/40 flex items-center justify-center select-none">
+                      <span className="text-sm font-serif">✦</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
         {/* Our Culinary Philosophy Section */}
-        <section className="mx-auto max-w-7xl items-center gap-16 px-6 py-28 md:px-12 grid md:grid-cols-2">
+        <section id="philosophy-section" className="mx-auto max-w-7xl items-center gap-16 px-6 py-28 md:px-12 grid md:grid-cols-2">
           <Reveal>
             <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-sand/30 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-charcoal/80 mb-4">
               <Sparkles size={13} className="text-gold" /> Botanical Elegance
@@ -264,7 +307,7 @@ export default function Home() {
         </section>
 
         {/* Signature Collection Section (Matched with Hero Section Style) */}
-        <section className="bg-[#FAFAF8] py-28 px-6 md:px-12 relative overflow-hidden text-charcoal border-t border-sand/40">
+        <section id="collection-section" className="bg-[#FAFAF8] py-28 px-6 md:px-12 relative overflow-hidden text-charcoal border-t border-sand/40">
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-gold/10 blur-[100px] pointer-events-none" />
 
           <div className="mx-auto max-w-7xl">
@@ -378,7 +421,7 @@ export default function Home() {
         <LogoShowcase />
 
         {/* Meet the Chef Section */}
-        <section className="mx-auto max-w-7xl items-center gap-16 px-6 py-28 md:px-12 grid md:grid-cols-2">
+        <section id="chef-section" className="mx-auto max-w-7xl items-center gap-16 px-6 py-28 md:px-12 grid md:grid-cols-2">
           <Reveal className="order-2 md:order-1">
             <div className="relative">
               <Img
@@ -420,7 +463,7 @@ export default function Home() {
         </section>
 
         {/* Customer Experiences / Testimonials with Top-Down Table BG & Glassmorphism */}
-        <section className="relative py-28 px-6 md:px-12 border-t border-sand overflow-hidden bg-[#FAF9F5]">
+        <section id="reviews-section" className="relative py-28 px-6 md:px-12 border-t border-sand overflow-hidden bg-[#FAF9F5]">
           {/* Top-down wooden dining table background photography */}
           <div 
             className="absolute inset-0 pointer-events-none bg-cover bg-center opacity-30 mix-blend-multiply scale-105"
@@ -507,7 +550,7 @@ export default function Home() {
         </section>
 
         {/* VIP Dining Invitation Banner (Harmonized Light Luxury Palette) */}
-        <section className="py-20 px-6 md:px-12 bg-[#FAF9F5] text-charcoal relative overflow-hidden border-t border-sand/70">
+        <section id="vip-section" className="py-20 px-6 md:px-12 bg-[#FAF9F5] text-charcoal relative overflow-hidden border-t border-sand/70">
           {/* Subtle Ambient Radial Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-gold/10 blur-[130px] pointer-events-none" />
 

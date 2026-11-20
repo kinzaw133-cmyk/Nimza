@@ -79,7 +79,7 @@ export interface InventoryTransaction {
   created_at: string;
 }
 
-export const INVENTORY_CATEGORIES = [
+const INVENTORY_CATEGORIES = [
   "All Categories",
   "Truffles & Delicacies",
   "Meat & Seafood",
@@ -89,7 +89,7 @@ export const INVENTORY_CATEGORIES = [
   "Beverages & Cellar",
 ];
 
-export const INVENTORY_UNITS = [
+const INVENTORY_UNITS = [
   "kg",
   "g",
   "lbs",

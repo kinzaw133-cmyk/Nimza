@@ -133,11 +133,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const queryClient = useQueryClient();
   const { user, role, loading, isAdmin } = useAuth();
 
+  const [mounted, setMounted] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Live clock
   useEffect(() => {
@@ -235,17 +240,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push("/");
   };
 
-  // 1. Loading screen
-  if (loading) {
+  // 1. Loading screen (SSR and initial client mount protection)
+  if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-[#1F241F] text-ivory flex flex-col items-center justify-center p-6">
-        <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/30 p-2 flex items-center justify-center animate-pulse">
-          <NimzaLogo variant="badge" size="sm" inverted={true} />
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6">
+        <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse">
+          <NimzaLogo variant="badge" size="sm" inverted={false} />
         </div>
-        <p className="mt-4 font-serif text-lg text-gold font-medium tracking-wide">
+        <p className="mt-4 font-serif text-lg text-[#1F241F] font-bold tracking-wide">
           Authenticating Nimza Executive Suite...
         </p>
-        <span className="text-xs text-sand/60 mt-1">Verifying security credentials</span>
+        <span className="text-xs text-charcoal/60 mt-1">Verifying security credentials</span>
       </div>
     );
   }
@@ -253,35 +258,35 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // 2. Access Gate if NOT admin
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#1F241F] text-ivory flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/15 blur-[150px] pointer-events-none" />
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Glow matching hero section */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/10 blur-[150px] pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-md">
-          <div className="rounded-[2.5rem] bg-[#141814]/90 border border-gold/40 shadow-2xl p-8 md:p-10 backdrop-blur-md">
+          <div className="rounded-[2.5rem] bg-white border border-sand/80 shadow-2xl p-8 md:p-10 backdrop-blur-md">
             {/* Logo */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gold/15 p-2 border border-gold/50 shadow-md flex items-center justify-center mb-3">
-                <NimzaLogo variant="badge" size="md" inverted={true} />
+              <div className="w-16 h-16 rounded-2xl bg-gold/15 p-2 border border-gold/40 shadow-xs flex items-center justify-center mb-3">
+                <NimzaLogo variant="badge" size="md" inverted={false} />
               </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#8C6D2D] mb-2">
                 <Lock size={12} />
                 <span>Restricted Management Portal</span>
               </div>
-              <h1 className="font-serif text-2xl md:text-3xl font-bold text-ivory">
+              <h1 className="font-serif text-2xl md:text-3xl font-bold text-[#1F241F]">
                 Admin Panel Access
               </h1>
-              <p className="text-xs text-sand/70 mt-1 max-w-xs leading-relaxed">
+              <p className="text-xs text-charcoal/70 mt-1 max-w-xs leading-relaxed font-sans">
                 Authorized management access for kitchen operations, menus, floor plans, and system controls.
               </p>
             </div>
 
             {/* Quick 1-Click Access for Instant Demo */}
-            <div className="p-4 rounded-2xl bg-gold/10 border border-gold/40 mb-6 text-center">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-gold block mb-1">
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-6 text-center">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-900 block mb-1">
                 One-Click Access
               </span>
-              <p className="text-xs text-sand/90 mb-3">
+              <p className="text-xs text-charcoal/80 mb-3">
                 Enter immediately with Executive Administrator privileges:
               </p>
               <button
@@ -295,16 +300,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* Divider */}
-            <div className="flex items-center gap-3 my-5 text-[10px] uppercase tracking-widest text-sand/50">
-              <span className="flex-1 h-px bg-sand/20" />
+            <div className="flex items-center gap-3 my-5 text-[10px] uppercase tracking-widest text-charcoal/40">
+              <span className="flex-1 h-px bg-sand/60" />
               <span>Or Supabase Login</span>
-              <span className="flex-1 h-px bg-sand/20" />
+              <span className="flex-1 h-px bg-sand/60" />
             </div>
 
             {/* Credentials Form */}
             <form onSubmit={handlePasswordLogin} className="space-y-3.5">
               <div>
-                <label className="block text-[10px] uppercase font-bold tracking-wider text-sand/70 mb-1">
+                <label className="block text-[10px] uppercase font-bold tracking-wider text-charcoal/70 mb-1">
                   Admin Email
                 </label>
                 <input
@@ -313,12 +318,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="admin@nimza.example"
-                  className="w-full rounded-xl bg-black/40 border border-sand/30 px-3.5 py-2.5 text-xs text-ivory placeholder:text-sand/40 outline-none focus:border-gold transition-colors"
+                  className="w-full rounded-xl bg-[#FAFAF8] border border-sand px-3.5 py-2.5 text-xs text-[#1F241F] placeholder:text-charcoal/40 outline-none focus:border-gold transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold tracking-wider text-sand/70 mb-1">
+                <label className="block text-[10px] uppercase font-bold tracking-wider text-charcoal/70 mb-1">
                   Password
                 </label>
                 <input
@@ -327,14 +332,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-black/40 border border-sand/30 px-3.5 py-2.5 text-xs text-ivory placeholder:text-sand/40 outline-none focus:border-gold transition-colors"
+                  className="w-full rounded-xl bg-[#FAFAF8] border border-sand px-3.5 py-2.5 text-xs text-[#1F241F] placeholder:text-charcoal/40 outline-none focus:border-gold transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/10 border border-gold/40 text-gold py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-gold hover:text-charcoal transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1F241F] text-gold py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-black transition-all shadow-sm"
               >
                 <LogIn size={14} />
                 <span>{isSubmitting ? "Authenticating..." : "Sign In With Password"}</span>
@@ -342,10 +347,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </form>
 
             {/* Return to Public Site */}
-            <div className="mt-6 pt-5 border-t border-sand/20 text-center">
+            <div className="mt-6 pt-5 border-t border-sand/60 text-center">
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 text-xs text-sand/70 hover:text-gold transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 text-xs text-charcoal/70 hover:text-gold transition-colors font-medium"
               >
                 <span>← Return to Public Dining Website</span>
               </Link>
@@ -364,42 +369,42 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F3ED] text-[#1F241F] flex flex-col lg:flex-row antialiased selection:bg-gold/30">
+    <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col lg:flex-row antialiased selection:bg-gold/30">
       {/* ========================================================= */}
-      {/* DESKTOP SIDEBAR (Static on lg screens) */}
+      {/* DESKTOP SIDEBAR (Static on lg screens - Hero Theme Match) */}
       {/* ========================================================= */}
-      <aside className="hidden lg:flex w-72 bg-[#171B17] text-ivory border-r border-gold/20 flex-col justify-between shrink-0 sticky top-0 h-screen select-none z-30">
+      <aside className="hidden lg:flex w-72 bg-[#FAF9F5] text-[#1F241F] border-r border-sand/80 flex-col justify-between shrink-0 sticky top-0 h-screen select-none z-30 shadow-xs">
         <div>
           {/* Brand Seal Header */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-sand/60">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-11 h-11 rounded-2xl bg-gold/15 p-1.5 border border-gold/40 shadow-sm flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
-                <NimzaLogo variant="badge" size="sm" inverted={true} />
+              <div className="w-11 h-11 rounded-2xl bg-gold/15 p-1.5 border border-gold/40 shadow-xs flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
+                <NimzaLogo variant="badge" size="sm" inverted={false} />
               </div>
               <div>
-                <span className="font-serif text-lg font-bold text-ivory tracking-tight group-hover:text-gold transition-colors block">
+                <span className="font-serif text-lg font-bold text-[#1F241F] tracking-tight group-hover:text-gold transition-colors block">
                   Nimza Admin
                 </span>
-                <span className="text-[10px] font-semibold text-gold/90 uppercase tracking-widest block">
+                <span className="text-[10px] font-bold text-[#8C6D2D] uppercase tracking-widest block">
                   Executive Suite
                 </span>
               </div>
             </Link>
 
             {/* Realtime Status Badge */}
-            <div className="mt-4 flex items-center gap-2 rounded-full bg-black/40 border border-emerald-500/30 px-3 py-1.5 text-[11px] text-emerald-300">
+            <div className="mt-4 flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-500/25 px-3 py-1.5 text-[11px] text-emerald-800 shadow-2xs">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span className="font-medium text-sand/90">Realtime Gateway Active</span>
+              <span className="font-medium text-emerald-900">Realtime Gateway Active</span>
             </div>
           </div>
 
           {/* Navigation Links */}
           <div className="px-4 py-5 space-y-6 overflow-y-auto max-h-[calc(100vh-270px)]">
             <div>
-              <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-sand/50 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-charcoal/50 block mb-2">
                 Management Modules
               </span>
               <nav className="space-y-1">
@@ -413,14 +418,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                       prefetch={true}
                       className={`group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                         isActive
-                          ? "bg-gold text-[#1F241F] shadow-sm font-bold"
-                          : "text-sand/80 hover:bg-white/5 hover:text-ivory"
+                          ? "bg-[#1F241F] text-gold shadow-md font-bold"
+                          : "text-charcoal/70 hover:bg-sand/40 hover:text-[#1F241F]"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <Icon
                           size={17}
-                          className={isActive ? "text-[#1F241F]" : "text-gold group-hover:scale-110 transition-transform"}
+                          className={isActive ? "text-gold" : "text-[#8C6D2D] group-hover:scale-110 transition-transform"}
                         />
                         <span>{item.label}</span>
                       </div>
@@ -428,8 +433,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                         <span
                           className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                             isActive
-                              ? "bg-[#1F241F]/15 text-[#1F241F] border-[#1F241F]/30"
-                              : item.badgeColor || "bg-gold/20 text-gold border-gold/40"
+                              ? "bg-gold/20 text-gold border-gold/40"
+                              : "bg-sand/60 text-charcoal/70 border-sand/70"
                           }`}
                         >
                           {item.badge}
@@ -443,30 +448,30 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
             {/* Quick Operations Links */}
             <div>
-              <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-sand/50 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-charcoal/50 block mb-2">
                 Operations & Public
               </span>
               <div className="space-y-1">
                 <Link
                   href="/chef"
-                  className="group flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-semibold text-orange-300 hover:bg-orange-950/40 border border-orange-500/20 hover:border-orange-500/50 transition-all"
+                  className="group flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-semibold text-amber-900 hover:bg-amber-500/10 border border-amber-500/25 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <Flame size={16} className="text-orange-400 group-hover:scale-110 transition-transform" />
+                    <Flame size={16} className="text-amber-600 group-hover:scale-110 transition-transform" />
                     <span>Chef Kitchen Station</span>
                   </div>
-                  <ArrowRight size={13} className="text-orange-400/60 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight size={13} className="text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
 
                 <Link
                   href="/"
-                  className="group flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-semibold text-sand/80 hover:bg-white/5 hover:text-ivory transition-all"
+                  className="group flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs font-semibold text-charcoal/70 hover:bg-sand/40 hover:text-[#1F241F] border border-transparent transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <ExternalLink size={16} className="text-sand/60 group-hover:text-gold transition-colors" />
+                    <ExternalLink size={16} className="text-charcoal/50 group-hover:text-gold transition-colors" />
                     <span>View Public Website</span>
                   </div>
-                  <ChevronRight size={14} className="text-sand/40" />
+                  <ChevronRight size={14} className="text-charcoal/40" />
                 </Link>
               </div>
             </div>
@@ -474,23 +479,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer Admin Profile Card */}
-        <div className="p-4 border-t border-white/10 bg-black/20">
-          <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+        <div className="p-4 border-t border-sand/60 bg-sand/20">
+          <div className="p-3 rounded-2xl bg-white border border-sand/80 shadow-2xs flex items-center justify-between">
             <div className="min-w-0 pr-2">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-gold" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gold">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C6D2D]">
                   Administrator
                 </span>
               </div>
-              <p className="text-xs font-semibold text-ivory truncate mt-0.5">
+              <p className="text-xs font-semibold text-[#1F241F] truncate mt-0.5">
                 {user?.email || "admin@nimza.example"}
               </p>
             </div>
             <button
               onClick={handleSignOut}
               title="Sign Out of Admin"
-              className="grid h-8 w-8 place-items-center rounded-xl bg-white/10 hover:bg-rose-900/60 text-sand hover:text-rose-200 transition-colors shrink-0"
+              className="grid h-8 w-8 place-items-center rounded-xl bg-sand/30 hover:bg-rose-50 border border-sand/60 hover:border-rose-200 text-charcoal/60 hover:text-rose-700 transition-colors shrink-0"
             >
               <LogOut size={14} />
             </button>
@@ -509,33 +514,33 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileSidebarOpen(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-xs z-40 lg:hidden"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 240 }}
-              className="fixed inset-y-0 left-0 w-80 bg-[#171B17] text-ivory border-r border-gold/30 z-50 flex flex-col justify-between p-6 lg:hidden"
+              className="fixed inset-y-0 left-0 w-80 bg-[#FAF9F5] text-[#1F241F] border-r border-sand/80 z-50 flex flex-col justify-between p-6 lg:hidden shadow-2xl"
             >
               <div>
-                <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-6">
+                <div className="flex items-center justify-between pb-6 border-b border-sand/60 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gold/15 p-1 border border-gold/40 flex items-center justify-center shrink-0">
-                      <NimzaLogo variant="badge" size="sm" inverted={true} />
+                      <NimzaLogo variant="badge" size="sm" inverted={false} />
                     </div>
                     <div>
-                      <span className="font-serif font-bold text-base text-ivory block">
+                      <span className="font-serif font-bold text-base text-[#1F241F] block">
                         Nimza Admin
                       </span>
-                      <span className="text-[10px] text-gold uppercase tracking-wider block">
+                      <span className="text-[10px] text-[#8C6D2D] uppercase tracking-wider block font-bold">
                         Executive Suite
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-sand hover:text-white"
+                    className="grid h-9 w-9 place-items-center rounded-xl bg-sand/40 text-charcoal hover:bg-sand/70"
                   >
                     <X size={18} />
                   </button>
@@ -553,16 +558,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                         onClick={() => setMobileSidebarOpen(false)}
                         className={`flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-semibold ${
                           isActive
-                            ? "bg-gold text-[#1F241F] font-bold shadow-md"
-                            : "text-sand/80 hover:bg-white/5"
+                            ? "bg-[#1F241F] text-gold font-bold shadow-md"
+                            : "text-charcoal/70 hover:bg-sand/40"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Icon size={18} className={isActive ? "text-[#1F241F]" : "text-gold"} />
+                          <Icon size={18} className={isActive ? "text-gold" : "text-[#8C6D2D]"} />
                           <span>{item.label}</span>
                         </div>
                         {item.badge && (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10">
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-sand/60 text-charcoal/80 border border-sand">
                             {item.badge}
                           </span>
                         )}
@@ -571,19 +576,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   })}
                 </nav>
 
-                <div className="mt-6 pt-6 border-t border-white/10 space-y-2">
+                <div className="mt-6 pt-6 border-t border-sand/60 space-y-2">
                   <Link
                     href="/chef"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-orange-300 bg-orange-950/40 border border-orange-500/30"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200"
                   >
-                    <Flame size={16} />
+                    <Flame size={16} className="text-amber-600" />
                     <span>Chef Kitchen Station</span>
                   </Link>
                   <Link
                     href="/"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-sand hover:bg-white/5"
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-charcoal/70 hover:bg-sand/40"
                   >
                     <ExternalLink size={16} />
                     <span>View Public Website</span>
@@ -591,13 +596,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                <span className="text-xs text-sand/70 truncate max-w-[180px]">
+              <div className="pt-4 border-t border-sand/60 flex items-center justify-between">
+                <span className="text-xs text-charcoal/70 truncate max-w-[180px]">
                   {user?.email || "admin@nimza.example"}
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="rounded-xl px-3 py-1.5 bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-bold"
+                  className="rounded-xl px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold"
                 >
                   Sign Out
                 </button>
@@ -629,7 +634,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 Admin
               </span>
               <span className="hidden sm:inline-block text-sand/80 text-xs">/</span>
-              <div className="flex items-center gap-1.5 font-serif font-bold text-base sm:text-lg text-olive">
+              <div className="flex items-center gap-1.5 font-serif font-bold text-base sm:text-lg text-[#1F241F]">
                 <activeNavItem.icon size={16} className="text-gold" />
                 <span>{activeNavItem.label}</span>
               </div>
@@ -666,7 +671,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </Link>
 
             {/* Admin Badge */}
-            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/50 px-2.5 sm:px-3 py-1 text-xs font-bold text-olive">
+            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/50 px-2.5 sm:px-3 py-1 text-xs font-bold text-[#1F241F]">
               <ShieldCheck size={14} className="text-gold" />
               <span className="hidden sm:inline">Executive Desk</span>
             </div>

@@ -54,12 +54,14 @@ export default function Navbar() {
   const { count } = useCart();
   const { count: favoritesCount } = useWishlist();
 
+  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 40);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -99,8 +101,8 @@ export default function Navbar() {
     window.location.href = "/";
   };
 
-  // Do not render public consumer navbar on dedicated admin panel & kitchen display (KDS) pages
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/chef")) {
+  // Do not render on SSR before hydration or on dedicated admin panel & kitchen display (KDS) pages
+  if (!mounted || pathname?.startsWith("/admin") || pathname?.startsWith("/chef")) {
     return null;
   }
 

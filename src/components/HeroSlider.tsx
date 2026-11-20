@@ -245,6 +245,7 @@ export default function HeroSlider() {
 
   return (
     <section
+      id="hero-section"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       className="relative min-h-[92vh] lg:min-h-screen overflow-hidden bg-[#FAFAF8] text-charcoal flex items-center pt-28 pb-20 md:pt-36 md:pb-28 lg:py-32 transition-colors duration-700"
@@ -520,9 +521,9 @@ export default function HeroSlider() {
         </div>
 
         {/* ======================================================== */}
-        {/* VERTICAL SLIDE INDICATOR DOTS (Right Edge from Reference)*/}
+        {/* DISH SLIDE CONTROLS & PAGINATION PILLS (HERO SECTION)    */}
         {/* ======================================================== */}
-        <div className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 flex-col items-center gap-3 p-2 rounded-full bg-white/70 backdrop-blur-md border border-sand/40 shadow-lg">
+        <div className="flex items-center justify-center gap-3 pt-8 pb-2">
           {SLIDES.map((slide, i) => {
             const isActive = i === index;
             return (
@@ -533,37 +534,22 @@ export default function HeroSlider() {
                   setSize("medium");
                 }}
                 aria-label={`Go to slide ${i + 1}: ${slide.title}`}
-                className="relative grid place-items-center p-1 rounded-full group focus:outline-none"
+                className="group relative flex items-center justify-center py-2 px-1 focus:outline-none"
               >
                 <div
                   className={`rounded-full transition-all duration-300 ${
-                    isActive ? "h-3.5 w-3.5 shadow-sm ring-2 ring-offset-2 ring-offset-white" : "h-2 w-2 opacity-50 group-hover:opacity-100"
+                    isActive
+                      ? "h-2.5 w-10 shadow-md ring-2 ring-offset-2 ring-offset-white"
+                      : "h-2.5 w-2.5 opacity-40 hover:opacity-80 hover:scale-125"
                   }`}
                   style={{
                     backgroundColor: slide.themeColor,
-                    ...(isActive ? { "--tw-ring-color": slide.themeColor } as any : {}),
+                    ...(isActive ? ({ "--tw-ring-color": slide.themeColor } as any) : {}),
                   }}
                 />
               </button>
             );
           })}
-        </div>
-
-        {/* Mobile / Tablet Horizontal Dots */}
-        <div className="flex lg:hidden items-center justify-center gap-2.5 pt-8">
-          {SLIDES.map((slide, i) => (
-            <button
-              key={slide.id}
-              onClick={() => {
-                setIndex(i);
-                setSize("medium");
-              }}
-              className={`rounded-full transition-all duration-300 ${
-                i === index ? "h-2.5 w-8" : "h-2.5 w-2.5 opacity-40"
-              }`}
-              style={{ backgroundColor: slide.themeColor }}
-            />
-          ))}
         </div>
       </div>
 
