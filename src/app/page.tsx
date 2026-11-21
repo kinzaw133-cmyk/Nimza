@@ -220,14 +220,45 @@ export default function Home() {
           {/* Right Feathered Edge Fade Mask */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-24 sm:w-44 bg-gradient-to-l from-[#1F241F] via-[#1F241F]/90 to-transparent z-10" />
 
-          {/* Infinite Smooth Scrolling Track */}
+          {/* Infinite Smooth Scrolling Track (Dual-Track Continuous Loop) */}
           <div className="flex overflow-hidden">
-            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0">
-              {[...METRICS, ...METRICS].map((item, index) => {
+            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0 pr-10 sm:pr-14">
+              {METRICS.map((item, index) => {
                 const Icon = item.icon;
                 return (
                   <div
-                    key={`${item.label}-${index}`}
+                    key={`m1-${item.label}-${index}`}
+                    className="flex items-center gap-10 sm:gap-14 shrink-0 group cursor-default"
+                  >
+                    <div className="flex items-center gap-4 py-1.5 px-3 rounded-2xl transition-all duration-300 group-hover:bg-white/5">
+                      <div className="p-3 rounded-2xl bg-gold/15 border border-gold/30 text-gold shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:bg-gold/25 group-hover:border-gold shadow-xs">
+                        <Icon size={22} />
+                      </div>
+                      <div className="whitespace-nowrap">
+                        <p className="text-[10px] font-sans tracking-[0.25em] text-sand/70 uppercase font-semibold">
+                          {item.label}
+                        </p>
+                        <p className="font-serif text-lg md:text-xl font-bold text-ivory mt-0.5 group-hover:text-gold transition-colors">
+                          {item.value}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Luxury Separator Diamond */}
+                    <div className="text-gold/40 flex items-center justify-center select-none">
+                      <span className="text-sm font-serif">✦</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0 pr-10 sm:pr-14" aria-hidden="true">
+              {METRICS.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={`m2-${item.label}-${index}`}
                     className="flex items-center gap-10 sm:gap-14 shrink-0 group cursor-default"
                   >
                     <div className="flex items-center gap-4 py-1.5 px-3 rounded-2xl transition-all duration-300 group-hover:bg-white/5">

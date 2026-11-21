@@ -123,14 +123,14 @@
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 
 .animate-marquee {
   display: flex;
-  width: max-content;
-  animation: marquee 35s linear infinite;
+  flex-shrink: 0;
+  animation: marquee 22s linear infinite;
   will-change: transform;
 }
 

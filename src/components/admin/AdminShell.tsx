@@ -37,7 +37,7 @@ import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/use
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/notify";
-import NimzaLogo from "@/components/NimzaLogo";
+import NimzaLogo, { NimzaBowlSvg } from "@/components/NimzaLogo";
 
 interface NavItem {
   label: string;
@@ -243,9 +243,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // 1. Loading screen (SSR and initial client mount protection)
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6">
-        <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse">
-          <NimzaLogo variant="badge" size="sm" inverted={false} />
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6" suppressHydrationWarning>
+        <div className="w-14 h-14 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse overflow-hidden">
+          <NimzaBowlSvg className="w-8 h-8" inverted={false} />
         </div>
         <p className="mt-4 font-serif text-lg text-[#1F241F] font-bold tracking-wide">
           Authenticating Nimza Executive Suite...
@@ -258,7 +258,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // 2. Access Gate if NOT admin
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex items-center justify-center p-6 relative overflow-hidden" suppressHydrationWarning>
         {/* Glow matching hero section */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/10 blur-[150px] pointer-events-none" />
 
@@ -266,8 +266,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <div className="rounded-[2.5rem] bg-white border border-sand/80 shadow-2xl p-8 md:p-10 backdrop-blur-md">
             {/* Logo */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gold/15 p-2 border border-gold/40 shadow-xs flex items-center justify-center mb-3">
-                <NimzaLogo variant="badge" size="md" inverted={false} />
+              <div className="w-16 h-16 rounded-2xl bg-gold/15 p-2 border border-gold/40 shadow-xs flex items-center justify-center mb-3 overflow-hidden">
+                <NimzaBowlSvg className="w-10 h-10" inverted={false} />
               </div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 border border-gold/40 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#8C6D2D] mb-2">
                 <Lock size={12} />
@@ -369,7 +369,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col lg:flex-row antialiased selection:bg-gold/30">
+    <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col lg:flex-row antialiased selection:bg-gold/30" suppressHydrationWarning>
       {/* ========================================================= */}
       {/* DESKTOP SIDEBAR (Static on lg screens - Hero Theme Match) */}
       {/* ========================================================= */}
@@ -378,8 +378,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           {/* Brand Seal Header */}
           <div className="p-6 border-b border-sand/60">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-11 h-11 rounded-2xl bg-gold/15 p-1.5 border border-gold/40 shadow-xs flex items-center justify-center transition-transform group-hover:scale-105 shrink-0">
-                <NimzaLogo variant="badge" size="sm" inverted={false} />
+              <div className="w-11 h-11 rounded-2xl bg-gold/15 p-1.5 border border-gold/40 shadow-xs flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 overflow-hidden">
+                <NimzaBowlSvg className="w-7 h-7" inverted={false} />
               </div>
               <div>
                 <span className="font-serif text-lg font-bold text-[#1F241F] tracking-tight group-hover:text-gold transition-colors block">
@@ -526,8 +526,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div>
                 <div className="flex items-center justify-between pb-6 border-b border-sand/60 mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gold/15 p-1 border border-gold/40 flex items-center justify-center shrink-0">
-                      <NimzaLogo variant="badge" size="sm" inverted={false} />
+                    <div className="w-10 h-10 rounded-xl bg-gold/15 p-1 border border-gold/40 flex items-center justify-center shrink-0 overflow-hidden">
+                      <NimzaBowlSvg className="w-6 h-6" inverted={false} />
                     </div>
                     <div>
                       <span className="font-serif font-bold text-base text-[#1F241F] block">

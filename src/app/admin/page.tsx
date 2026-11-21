@@ -40,7 +40,7 @@ import {
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
-import NimzaLogo from "@/components/NimzaLogo";
+import NimzaLogo, { NimzaBowlSvg } from "@/components/NimzaLogo";
 
 interface OrderItem {
   quantity: number;
@@ -1298,7 +1298,9 @@ export default function AdminDashboardPage() {
         {/* BOTTOM BRAND FOOTNOTE */}
         <div className="rounded-3xl border border-sand bg-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-charcoal/70">
           <div className="flex items-center gap-3">
-            <NimzaLogo variant="badge" size="sm" />
+            <div className="w-9 h-9 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+              <NimzaBowlSvg className="w-6 h-6" inverted={false} />
+            </div>
             <div>
               <p className="font-serif font-bold text-sm text-olive">
                 Nimza Executive Suite

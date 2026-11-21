@@ -41,6 +41,7 @@ import {
   Phone,
   Compass,
   Star,
+  Users,
 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
@@ -733,6 +734,14 @@ export default function Orders() {
                         <p className="text-xs text-charcoal/50 font-medium">
                           (Rs. {Math.round(Number(order.total || 0) * 280).toLocaleString()} PKR)
                         </p>
+                        {order.split_count && order.split_count > 1 && (
+                          <div className="mt-1.5 flex items-center justify-start sm:justify-end">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold/15 text-[#8C6D2D] border border-gold/40">
+                              <Users size={11} />
+                              <span>Split: {order.split_count} Diners (Rs. {order.split_per_person_pkr?.toLocaleString()} / each)</span>
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
