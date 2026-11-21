@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import { toast } from "@/lib/notify";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 export default function Contact() {
+  const [countryCode, setCountryCode] = useState("+92");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -30,6 +32,10 @@ export default function Contact() {
     e.preventDefault();
     if (!form.name || !form.email) {
       toast("Please provide your name and email", "error");
+      return;
+    }
+    if (form.phone && form.phone.length !== 11) {
+      toast("Contact phone number must contain exactly 11 digits.", "error");
       return;
     }
     setIsSent(true);
@@ -187,16 +193,15 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-charcoal/70 mb-2">
-                      Phone Number (Optional)
-                    </label>
-                    <input
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+92 300 0000000"
-                      className="inp"
+                    <PhoneInputWithCountry
+                      countryCode={countryCode}
+                      onCountryCodeChange={setCountryCode}
+                      phoneNumber={form.phone}
+                      onPhoneNumberChange={(val) => setForm({ ...form, phone: val })}
+                      label="Contact Phone"
+                      placeholder="03001234567"
                     />
                   </div>
 

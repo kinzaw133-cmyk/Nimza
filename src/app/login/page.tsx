@@ -24,6 +24,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
+import { verifyAdminCredentials, verifyChefCredentials, PERMANENT_CREDENTIALS } from "@/lib/authConfig";
 import NimzaLogo from "@/components/NimzaLogo";
 
 export default function Login() {
@@ -47,16 +48,96 @@ export default function Login() {
     if (rl) setRequestedRole(rl);
   }, []);
 
-  // Robust authentication supporting both Supabase Cloud & Instant Local Session
+  // Permanent Credentials Authentication with strict role verification
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      let authenticatedUser: any = null;
-      let userRole: "customer" | "chef" | "admin" | "delivery" = "customer";
+      const cleanEmail = form.email.trim().toLowerCase();
+      const cleanPassword = form.password;
 
-      // 1. If Supabase is configured, attempt cloud authentication first
+      // 1. Prevent public registration using protected permanent system accounts
+      if (isRegister) {
+        if (cleanEmail === PERMANENT_CREDENTIALS.admin.email || cleanEmail === PERMANENT_CREDENTIALS.chef.email) {
+          toast("Permanent system accounts cannot be re-registered. Please sign in.", "error");
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // 2. Strict Administrator Authentication
+      const isTargetingAdmin =
+        requestedRole === "admin" ||
+        targetRedirect.startsWith("/admin") ||
+        cleanEmail === PERMANENT_CREDENTIALS.admin.email;
+
+      if (isTargetingAdmin) {
+        if (!verifyAdminCredentials(cleanEmail, cleanPassword)) {
+          if (cleanEmail !== PERMANENT_CREDENTIALS.admin.email) {
+            toast("Access Denied: Invalid Administrator email address.", "error");
+          } else {
+            toast("Access Denied: Incorrect Administrator password.", "error");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Verified Administrator Session
+        document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
+        const adminUser = {
+          id: "admin-master",
+          email: PERMANENT_CREDENTIALS.admin.email,
+          role: "admin" as const,
+          user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
+        };
+        setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
+        queryClient.setQueryData(AUTH_QUERY_KEY, { user: adminUser, role: "admin" });
+        toast("Welcome back, Executive Administrator!", "success");
+        router.replace(targetRedirect || "/admin");
+        return;
+      }
+
+      // 3. Strict Executive Chef Authentication
+      const isTargetingChef =
+        requestedRole === "chef" ||
+        targetRedirect.startsWith("/chef") ||
+        cleanEmail === PERMANENT_CREDENTIALS.chef.email;
+
+      if (isTargetingChef) {
+        if (!verifyChefCredentials(cleanEmail, cleanPassword)) {
+          if (cleanEmail !== PERMANENT_CREDENTIALS.chef.email) {
+            toast("Access Denied: Invalid Executive Chef email address.", "error");
+          } else {
+            toast("Access Denied: Incorrect Chef password.", "error");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Verified Executive Chef Session
+        document.cookie = `sb-user-role=chef; path=/; max-age=604800; SameSite=Lax`;
+        const chefUser = {
+          id: "chef-master",
+          email: PERMANENT_CREDENTIALS.chef.email,
+          role: "chef" as const,
+          user_metadata: { full_name: PERMANENT_CREDENTIALS.chef.name },
+        };
+        setTestSession("chef", PERMANENT_CREDENTIALS.chef.email, PERMANENT_CREDENTIALS.chef.name);
+        queryClient.setQueryData(AUTH_QUERY_KEY, { user: chefUser, role: "chef" });
+        toast("Welcome back, Executive Chef Elias Varga!", "success");
+        router.replace(targetRedirect || "/chef");
+        return;
+      }
+
+      // 4. Regular Customer & Courier Authentication
+      let authenticatedUser: any = null;
+      let userRole: "customer" | "delivery" = "customer";
+
+      if (cleanEmail.includes("driver") || cleanEmail.includes("delivery")) {
+        userRole = "delivery";
+      }
+
       if (isSupabaseConfigured) {
         try {
           if (isRegister) {
@@ -77,81 +158,37 @@ export default function Login() {
               password: form.password,
             });
             if (error) throw error;
-            if (data?.user) {
-              authenticatedUser = data.user;
-              try {
-                const { data: p } = await supabase
-                  .from("profiles")
-                  .select("role")
-                  .eq("id", data.user.id)
-                  .single();
-                if (p?.role) userRole = p.role;
-              } catch {}
-            }
+            if (data?.user) authenticatedUser = data.user;
           }
         } catch (cloudErr: any) {
-          console.warn("Supabase cloud unreachable, seamlessly using local authentication:", cloudErr?.message);
+          console.warn("Supabase auth skipped/failed:", cloudErr?.message);
         }
       }
 
-      // 2. Local Fallback (ensures zero 'Failed to fetch' errors in local dev or offline mode)
+      // Local session for guest/member
       if (!authenticatedUser) {
-        const emailLower = form.email.toLowerCase();
-        // Infer or honor requested role
-        if (requestedRole === "admin" || emailLower.includes("admin")) {
-          userRole = "admin";
-        } else if (requestedRole === "chef" || emailLower.includes("chef")) {
-          userRole = "chef";
-        } else if (requestedRole === "delivery" || emailLower.includes("driver") || emailLower.includes("delivery")) {
-          userRole = "delivery";
-        } else {
-          userRole = (requestedRole as any) || "customer";
-        }
-
         const displayName = form.name || form.email.split("@")[0] || "VIP Member";
-
-        // Record in local persistent storage for cross-page session remembrance
-        try {
-          const registered = JSON.parse(localStorage.getItem("nimza_local_registered_users") || "[]");
-          const existingIdx = registered.findIndex((u: any) => u.email.toLowerCase() === form.email.toLowerCase());
-          if (existingIdx >= 0) {
-            userRole = registered[existingIdx].role || userRole;
-          } else {
-            registered.push({ email: form.email, name: displayName, role: userRole });
-            localStorage.setItem("nimza_local_registered_users", JSON.stringify(registered));
-          }
-        } catch {}
-
         authenticatedUser = {
           id: `user-${Date.now()}`,
           email: form.email,
           role: userRole,
           user_metadata: { full_name: displayName },
         };
-
         setTestSession(userRole, form.email, displayName);
       }
 
-      // 3. Synchronize TanStack Query and Cookie
       document.cookie = `sb-user-role=${userRole}; path=/; max-age=604800; SameSite=Lax`;
       queryClient.setQueryData(AUTH_QUERY_KEY, { user: authenticatedUser, role: userRole });
 
       if (isRegister) {
         toast(`VIP Membership Created! Welcome to Nimza, ${authenticatedUser.user_metadata?.full_name || form.email}.`, "success");
       } else {
-        toast(`Welcome back to Nimza (${userRole.toUpperCase()})!`, "success");
+        toast(`Welcome back to Nimza!`, "success");
       }
 
-      // 4. Smooth Redirect to target path or dashboard
       const dest =
         targetRedirect ||
-        (userRole === "admin"
-          ? "/admin"
-          : userRole === "chef"
-          ? "/chef"
-          : userRole === "delivery"
-          ? "/driver"
-          : "/");
+        (userRole === "delivery" ? "/driver" : "/");
 
       router.replace(dest);
     } catch (err: any) {
@@ -161,51 +198,59 @@ export default function Login() {
     }
   }
 
-  // Quick 1-click test role login with instant TanStack Query cache synchronization
-  const handleQuickLogin = (targetRole: "admin" | "chef" | "customer" | "delivery") => {
-    const config = {
-      admin: {
-        email: "admin@nimza.example",
-        name: "General Manager & Admin",
-        dest: targetRedirect && targetRole === "admin" ? targetRedirect : "/admin",
-      },
-      chef: {
-        email: "chef@nimza.example",
-        name: "Chef Elias Varga",
-        dest: targetRedirect && (targetRole === "chef" || targetRole === "admin") ? targetRedirect : "/chef",
-      },
-      delivery: {
-        email: "driver.marco@nimza.example",
-        name: "Marco Rossi (Delivery Driver)",
-        dest: targetRedirect && (targetRole === "delivery" || targetRole === "admin") ? targetRedirect : "/driver",
-      },
-      customer: {
-        email: "sterling@example.com",
-        name: "Lord Sterling (Customer)",
-        dest: targetRedirect || "/",
-      },
-    }[targetRole];
-
-    setTestSession(targetRole, config.email, config.name);
-    queryClient.setQueryData(AUTH_QUERY_KEY, {
-      user: {
-        id: `test-${targetRole}`,
-        email: config.email,
-        role: targetRole,
-        user_metadata: { full_name: config.name },
-      },
-      role: targetRole,
-    });
-    toast(`Authenticated as ${targetRole.toUpperCase()}`, "success");
-
-    router.replace(config.dest);
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     clearSession();
     queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Signed out successfully", "info");
+  };
+
+  // 1-Click Quick Role Sign In for the 3 core roles: Admin, Chef, and Customer
+  const handleQuickLogin = (targetRole: "admin" | "chef" | "customer") => {
+    if (targetRole === "admin") {
+      document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
+      const adminUser = {
+        id: "admin-master",
+        email: PERMANENT_CREDENTIALS.admin.email,
+        role: "admin" as const,
+        user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
+      };
+      setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
+      queryClient.setQueryData(AUTH_QUERY_KEY, { user: adminUser, role: "admin" });
+      toast("Welcome back, Executive Administrator!", "success");
+      router.replace(targetRedirect || "/admin");
+      return;
+    }
+
+    if (targetRole === "chef") {
+      document.cookie = `sb-user-role=chef; path=/; max-age=604800; SameSite=Lax`;
+      const chefUser = {
+        id: "chef-master",
+        email: PERMANENT_CREDENTIALS.chef.email,
+        role: "chef" as const,
+        user_metadata: { full_name: PERMANENT_CREDENTIALS.chef.name },
+      };
+      setTestSession("chef", PERMANENT_CREDENTIALS.chef.email, PERMANENT_CREDENTIALS.chef.name);
+      queryClient.setQueryData(AUTH_QUERY_KEY, { user: chefUser, role: "chef" });
+      toast("Welcome back, Executive Chef Elias Varga!", "success");
+      router.replace(targetRedirect || "/chef");
+      return;
+    }
+
+    if (targetRole === "customer") {
+      document.cookie = `sb-user-role=customer; path=/; max-age=604800; SameSite=Lax`;
+      const custUser = {
+        id: "cust-01",
+        email: "sterling@example.com",
+        role: "customer" as const,
+        user_metadata: { full_name: "Lord Sterling" },
+      };
+      setTestSession("customer", "sterling@example.com", "Lord Sterling");
+      queryClient.setQueryData(AUTH_QUERY_KEY, { user: custUser, role: "customer" });
+      toast("Welcome back, Lord Sterling!", "success");
+      router.replace(targetRedirect || "/");
+      return;
+    }
   };
 
   return (
@@ -262,7 +307,7 @@ export default function Login() {
                 <span className="font-bold uppercase tracking-wider block text-amber-800">
                   {requestedRole.toUpperCase()} Privileges Required
                 </span>
-                Sign in with authorized credentials or tap the 1-Click {requestedRole.toUpperCase()} button below to access.
+                Please sign in with your authorized credentials to access this protected portal.
               </div>
             </div>
           )}
@@ -321,7 +366,7 @@ export default function Login() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="sterling@example.com"
+                placeholder="Enter your email address"
                 className="w-full rounded-2xl bg-[#FAFAF8] border border-sand/90 px-4 py-3 text-sm text-[#1F241F] placeholder:text-charcoal/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
               />
             </div>
@@ -337,7 +382,7 @@ export default function Login() {
                   minLength={6}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Enter your password"
                   className="w-full rounded-2xl bg-[#FAFAF8] border border-sand/90 px-4 py-3 text-sm text-[#1F241F] placeholder:text-charcoal/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors pr-10"
                 />
                 <button
@@ -366,20 +411,20 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Quick Role Tester Buttons */}
+          {/* Quick Role Sign In: Admin, Chef, Customer */}
           <div className="mt-8 pt-6 border-t border-sand/70">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#B99A5B]">
                 1-Click Quick Role Sign In
               </span>
-              <span className="text-[10px] text-charcoal/40 font-mono">Dev / Quick Access</span>
+              <span className="text-[10px] text-charcoal/40 font-mono">3 Roles</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleQuickLogin("admin")}
                 className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 hover:bg-amber-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as General Manager & Administrator"
+                title="Sign in as Executive Administrator"
               >
                 <ShieldCheck size={18} className="text-amber-700 group-hover:text-white transition-colors" />
                 <span className="text-[11px] font-bold">Admin</span>
@@ -393,16 +438,6 @@ export default function Login() {
               >
                 <ChefHat size={18} className="text-orange-700 group-hover:text-white transition-colors" />
                 <span className="text-[11px] font-bold">Chef</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("delivery")}
-                className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-900 hover:bg-blue-600 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Delivery Driver Marco Rossi"
-              >
-                <Bike size={18} className="text-blue-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Delivery</span>
               </button>
 
               <button

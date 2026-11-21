@@ -39,6 +39,7 @@ import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
 import QRCodeSvg from "@/components/QRCodeSvg";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 // 12 Curated Dining Stations across 5 Signature Zones
 const RESTAURANT_TABLES = [
@@ -266,6 +267,7 @@ export default function ReservationsPage() {
   } | null>(null);
 
   // Form State
+  const [countryCode, setCountryCode] = useState("+92");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -412,8 +414,8 @@ export default function ReservationsPage() {
       return;
     }
 
-    if (!/^[0-9+ ()-]{7,18}$/.test(form.phone.trim())) {
-      toast("Please provide a valid contact number (7-15 digits)", "error");
+    if (form.phone.trim().length !== 11) {
+      toast("Contact phone number must contain exactly 11 digits (e.g. 03001234567)", "error");
       return;
     }
 
@@ -894,19 +896,15 @@ export default function ReservationsPage() {
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal/70 mb-1.5">
-                              Contact Phone (SMS Reminders) *
-                            </label>
-                            <div className="relative">
-                              <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal/40" />
-                              <input
-                                required
-                                value={form.phone}
-                                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                                placeholder="+92 300 1234567"
-                                className="inp !pl-10 !text-sm"
-                              />
-                            </div>
+                            <PhoneInputWithCountry
+                              countryCode={countryCode}
+                              onCountryCodeChange={setCountryCode}
+                              phoneNumber={form.phone}
+                              onPhoneNumberChange={(val) => setForm({ ...form, phone: val })}
+                              label="Contact Phone (SMS Reminders)"
+                              placeholder="03001234567"
+                              required
+                            />
                           </div>
                         </div>
 

@@ -15,10 +15,12 @@ import {
   AlertCircle,
   Copy,
   ArrowRight,
+  Lock,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
+import { isPermanentSystemEmail } from "@/lib/authConfig";
 import NimzaLogo from "@/components/NimzaLogo";
 
 interface UserProfile {
@@ -53,16 +55,16 @@ export default function UsersManagementPage() {
         // Fallback initial profiles for presentation if empty
         setProfiles([
           {
-            id: user?.id || "admin-01",
-            full_name: user?.email ? user.email.split("@")[0] : "Executive Administrator",
+            id: "admin-master",
+            full_name: "Executive Administrator",
             role: "admin",
-            email: user?.email || "admin@nimza.example",
+            email: "[Protected Master Account]",
           },
           {
-            id: "chef-01",
-            full_name: "Elias Varga (Executive Chef)",
+            id: "chef-master",
+            full_name: "Executive Chef Elias Varga",
             role: "chef",
-            email: "chef@nimza.example",
+            email: "[Protected Master Account]",
           },
           {
             id: "cust-01",
@@ -90,6 +92,19 @@ export default function UsersManagementPage() {
   }, []);
 
   const handleRoleChange = async (targetUserId: string, newRole: "customer" | "chef" | "admin") => {
+    const targetProfile = profiles.find((p) => p.id === targetUserId);
+    if (
+      targetUserId === "admin-master" ||
+      targetUserId === "chef-master" ||
+      targetUserId === "admin-01" ||
+      targetUserId === "chef-01" ||
+      (targetProfile?.email && isPermanentSystemEmail(targetProfile.email)) ||
+      targetProfile?.email === "[Protected Master Account]"
+    ) {
+      toast("Access Denied: Permanent system master accounts cannot be altered.", "error");
+      return;
+    }
+
     setUpdatingId(targetUserId);
     try {
       // 1. Execute via Server-side check API route
@@ -298,6 +313,17 @@ export default function UsersManagementPage() {
                   const isCurAdmin = p.role === "admin";
                   const isCurChef = p.role === "chef";
                   const isCurCustomer = p.role === "customer";
+                  const isPermanent =
+                    p.id === "admin-master" ||
+                    p.id === "chef-master" ||
+                    p.id === "admin-01" ||
+                    p.id === "chef-01" ||
+                    isPermanentSystemEmail(p.email) ||
+                    p.email === "[Protected Master Account]";
+
+                  const displayEmail = isPermanent
+                    ? "[Protected Master Account]"
+                    : p.email || "patron@nimza.example";
 
                   return (
                     <tr key={p.id} className="hover:bg-sand/10 transition-colors">
@@ -326,7 +352,7 @@ export default function UsersManagementPage() {
                               {p.full_name || "Registered Diner"}
                             </p>
                             <p className="text-[11px] text-charcoal/60">
-                              {p.email || "patron@nimza.example"}
+                              {displayEmail}
                             </p>
                           </div>
                         </div>
@@ -355,35 +381,48 @@ export default function UsersManagementPage() {
                         </span>
                       </td>
 
-                      {/* Role Changer Select */}
+                      {/* Role Changer Select or Locked Master */}
                       <td className="py-4 px-6">
-                        <select
-                          disabled={updatingId === p.id}
-                          value={p.role}
-                          onChange={(e) =>
-                            handleRoleChange(
-                              p.id,
-                              e.target.value as "customer" | "chef" | "admin"
-                            )
-                          }
-                          className="rounded-xl border border-sand bg-sand/20 px-3 py-1.5 text-xs font-semibold text-charcoal outline-none focus:border-gold hover:border-gold/50 cursor-pointer disabled:opacity-50"
-                        >
-                          <option value="customer">customer (Diner)</option>
-                          <option value="chef">chef (Kitchen Pass)</option>
-                          <option value="admin">admin (Full Control)</option>
-                        </select>
+                        {isPermanent ? (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold/15 border border-gold/40 text-[11px] font-bold text-[#8C6D2D]">
+                            <Lock size={12} className="text-gold" />
+                            <span>Master Account (Locked)</span>
+                          </div>
+                        ) : (
+                          <select
+                            disabled={updatingId === p.id}
+                            value={p.role}
+                            onChange={(e) =>
+                              handleRoleChange(
+                                p.id,
+                                e.target.value as "customer" | "chef" | "admin"
+                              )
+                            }
+                            className="rounded-xl border border-sand bg-sand/20 px-3 py-1.5 text-xs font-semibold text-charcoal outline-none focus:border-gold hover:border-gold/50 cursor-pointer disabled:opacity-50"
+                          >
+                            <option value="customer">customer (Diner)</option>
+                            <option value="chef">chef (Kitchen Pass)</option>
+                            <option value="admin">admin (Full Control)</option>
+                          </select>
+                        )}
                       </td>
 
                       {/* Supabase SQL Copy Helper */}
                       <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => copySql(p.email || p.id, p.role)}
-                          title="Copy Supabase SQL statement"
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-charcoal/60 hover:text-gold transition-colors"
-                        >
-                          <Copy size={13} />
-                          <span>Copy SQL</span>
-                        </button>
+                        {isPermanent ? (
+                          <span className="text-[11px] text-charcoal/40 italic font-mono">
+                            Protected Master
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => copySql(p.email || p.id, p.role)}
+                            title="Copy Supabase SQL statement"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-charcoal/60 hover:text-gold transition-colors"
+                          >
+                            <Copy size={13} />
+                            <span>Copy SQL</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

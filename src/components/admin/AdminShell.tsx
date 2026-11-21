@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Star,
   Users,
+  User,
   Flame,
   ExternalLink,
   ShieldCheck,
@@ -37,6 +38,7 @@ import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/use
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { toast } from "@/lib/notify";
+import { verifyAdminCredentials, PERMANENT_CREDENTIALS } from "@/lib/authConfig";
 import NimzaLogo, { NimzaBowlSvg } from "@/components/NimzaLogo";
 
 interface NavItem {
@@ -182,60 +184,27 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     } catch {}
   };
 
-  const handle1ClickAdmin = () => {
-    setTestSession("admin", "admin@nimza.example", "General Manager & Admin");
-    queryClient.setQueryData(AUTH_QUERY_KEY, {
-      user: {
-        id: "test-admin",
-        email: "admin@nimza.example",
-        role: "admin",
-        user_metadata: { full_name: "General Manager & Admin" },
-      },
-      role: "admin",
-    });
-    toast("Executive Administrator access granted", "success");
-    playChime();
-  };
-
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      if (isSupabaseConfigured) {
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: emailInput,
-            password: passwordInput,
-          });
-          if (!error && data?.user) {
-            let userRole: "customer" | "chef" | "admin" | "delivery" = "customer";
-            const { data: p } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", data.user.id)
-              .single();
-            if (p?.role) userRole = p.role;
-            if (userRole === "admin") {
-              document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
-              queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: "admin" });
-              toast("Administrator verified successfully", "success");
-              playChime();
-              return;
-            }
-          }
-        } catch (cloudErr) {
-          console.warn("Supabase cloud unreachable, using local admin session:", cloudErr);
-        }
+      // Strict verification against permanent Administrator credentials
+      const isValid = verifyAdminCredentials(emailInput, passwordInput);
+      if (!isValid) {
+        toast("Access Denied: Invalid Administrator email or password.", "error");
+        setIsSubmitting(false);
+        return;
       }
 
-      // Local admin session fallback
-      setTestSession("admin", emailInput || "admin@nimza.example", "Executive Administrator");
+      // Verified! Set permanent administrator session and cookie
+      document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
+      setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
       queryClient.setQueryData(AUTH_QUERY_KEY, {
         user: {
-          id: "admin-local",
-          email: emailInput || "admin@nimza.example",
+          id: "admin-master",
+          email: PERMANENT_CREDENTIALS.admin.email,
           role: "admin",
-          user_metadata: { full_name: "Executive Administrator" },
+          user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
         },
         role: "admin",
       });
@@ -253,6 +222,55 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     clearSession();
     queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Administrator signed out", "info");
+    router.push("/");
+  };
+
+  // 1-Click Quick Role Access for Admin, Chef, and Customer
+  const handleQuickAdmin = () => {
+    document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
+    setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
+    queryClient.setQueryData(AUTH_QUERY_KEY, {
+      user: {
+        id: "admin-master",
+        email: PERMANENT_CREDENTIALS.admin.email,
+        role: "admin",
+        user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
+      },
+      role: "admin",
+    });
+    toast("Executive Administrator access granted", "success");
+    playChime();
+  };
+
+  const handleQuickChef = () => {
+    document.cookie = `sb-user-role=chef; path=/; max-age=604800; SameSite=Lax`;
+    setTestSession("chef", PERMANENT_CREDENTIALS.chef.email, PERMANENT_CREDENTIALS.chef.name);
+    queryClient.setQueryData(AUTH_QUERY_KEY, {
+      user: {
+        id: "chef-master",
+        email: PERMANENT_CREDENTIALS.chef.email,
+        role: "chef",
+        user_metadata: { full_name: PERMANENT_CREDENTIALS.chef.name },
+      },
+      role: "chef",
+    });
+    toast("Switching to Chef Kitchen Station...", "info");
+    router.push("/chef");
+  };
+
+  const handleQuickCustomer = () => {
+    document.cookie = `sb-user-role=customer; path=/; max-age=604800; SameSite=Lax`;
+    setTestSession("customer", "sterling@example.com", "Lord Sterling");
+    queryClient.setQueryData(AUTH_QUERY_KEY, {
+      user: {
+        id: "cust-01",
+        email: "sterling@example.com",
+        role: "customer",
+        user_metadata: { full_name: "Lord Sterling" },
+      },
+      role: "customer",
+    });
+    toast("Welcome, Dining Patron", "info");
     router.push("/");
   };
 
@@ -297,31 +315,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               </p>
             </div>
 
-            {/* Quick 1-Click Access for Instant Demo */}
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-6 text-center">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-900 block mb-1">
-                One-Click Access
-              </span>
-              <p className="text-xs text-charcoal/80 mb-3">
-                Enter immediately with Executive Administrator privileges:
-              </p>
-              <button
-                type="button"
-                onClick={handle1ClickAdmin}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold text-[#1F241F] py-3 text-xs font-bold uppercase tracking-wider hover:bg-gold-light hover:scale-[1.02] transition-all shadow-md"
-              >
-                <ShieldCheck size={16} />
-                <span>Enter Admin Panel (1-Click)</span>
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5 text-[10px] uppercase tracking-widest text-charcoal/40">
-              <span className="flex-1 h-px bg-sand/60" />
-              <span>Or Supabase Login</span>
-              <span className="flex-1 h-px bg-sand/60" />
-            </div>
-
             {/* Credentials Form */}
             <form onSubmit={handlePasswordLogin} className="space-y-3.5">
               <div>
@@ -333,7 +326,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="admin@nimza.example"
+                  placeholder="Enter administrator email"
                   className="w-full rounded-xl bg-[#FAFAF8] border border-sand px-3.5 py-2.5 text-xs text-[#1F241F] placeholder:text-charcoal/40 outline-none focus:border-gold transition-colors"
                 />
               </div>
@@ -347,7 +340,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   required
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter administrator password"
                   className="w-full rounded-xl bg-[#FAFAF8] border border-sand px-3.5 py-2.5 text-xs text-[#1F241F] placeholder:text-charcoal/40 outline-none focus:border-gold transition-colors"
                 />
               </div>
@@ -361,6 +354,47 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 <span>{isSubmitting ? "Authenticating..." : "Sign In With Password"}</span>
               </button>
             </form>
+
+            {/* Quick 3 Roles Access: Admin, Chef, Customer */}
+            <div className="mt-6 pt-5 border-t border-sand/70">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#8C6D2D]">
+                  1-Click Quick Role Sign In
+                </span>
+                <span className="text-[10px] text-charcoal/40 font-mono">3 Roles</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={handleQuickAdmin}
+                  className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 hover:bg-amber-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
+                  title="Sign in as Executive Administrator"
+                >
+                  <ShieldCheck size={18} className="text-amber-700 group-hover:text-white transition-colors" />
+                  <span className="text-[11px] font-bold">Admin</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleQuickChef}
+                  className="p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-900 hover:bg-orange-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
+                  title="Switch to Chef Kitchen Station"
+                >
+                  <ChefHat size={18} className="text-orange-700 group-hover:text-white transition-colors" />
+                  <span className="text-[11px] font-bold">Chef</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleQuickCustomer}
+                  className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 hover:bg-emerald-600 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
+                  title="Enter as Dining Customer"
+                >
+                  <User size={18} className="text-emerald-700 group-hover:text-white transition-colors" />
+                  <span className="text-[11px] font-bold">Customer</span>
+                </button>
+              </div>
+            </div>
 
             {/* Return to Public Site */}
             <div className="mt-6 pt-5 border-t border-sand/60 text-center">
@@ -505,7 +539,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 </span>
               </div>
               <p className="text-xs font-semibold text-[#1F241F] truncate mt-0.5">
-                {user?.email || "admin@nimza.example"}
+                {user?.user_metadata?.full_name || "Executive Administrator"}
               </p>
             </div>
             <button
@@ -613,8 +647,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               </div>
 
               <div className="pt-4 border-t border-sand/60 flex items-center justify-between">
-                <span className="text-xs text-charcoal/70 truncate max-w-[180px]">
-                  {user?.email || "admin@nimza.example"}
+                <span className="text-xs font-bold text-charcoal/70 truncate max-w-[180px]">
+                  {user?.user_metadata?.full_name || "Executive Administrator"}
                 </span>
                 <button
                   onClick={handleSignOut}
@@ -675,16 +709,27 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <Volume2 size={15} />
             </button>
 
-            {/* View Public Website */}
-            <Link
-              href="/"
-              target="_blank"
-              title="Open public dining site in new tab"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-sand bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:border-gold hover:text-gold transition-all"
-            >
-              <span>Public Site</span>
-              <ExternalLink size={12} />
-            </Link>
+            {/* Quick 3 Roles Jumper in Topbar (Admin, Chef, Customer) */}
+            <div className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-sand/30 border border-sand">
+              <span className="flex items-center gap-1 rounded-full bg-[#1F241F] text-gold px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
+                <ShieldCheck size={11} className="text-gold" /> Admin
+              </span>
+              <Link
+                href="/chef"
+                title="Switch to Chef Kitchen Station"
+                className="flex items-center gap-1 rounded-full text-charcoal/70 hover:text-[#1F241F] hover:bg-white px-2.5 py-0.5 text-[10px] font-semibold transition-all"
+              >
+                <ChefHat size={11} /> Chef
+              </Link>
+              <Link
+                href="/"
+                target="_blank"
+                title="Switch to Public Customer Dining Site"
+                className="flex items-center gap-1 rounded-full text-charcoal/70 hover:text-[#1F241F] hover:bg-white px-2.5 py-0.5 text-[10px] font-semibold transition-all"
+              >
+                <User size={11} /> Customer
+              </Link>
+            </div>
 
             {/* Admin Badge */}
             <div className="flex items-center gap-1.5 rounded-full bg-gold/15 border border-gold/50 px-2.5 sm:px-3 py-1 text-xs font-bold text-[#1F241F]">

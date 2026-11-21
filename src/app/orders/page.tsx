@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +51,10 @@ import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
 import Img from "@/components/Img";
 import LiveDeliveryMap from "@/components/LiveDeliveryMap";
-import ReviewModal from "@/components/ReviewModal";
+
+const ReviewModal = dynamic(() => import("@/components/ReviewModal"), {
+  ssr: false,
+});
 import {
   getStoredDeliveryOrders,
   DeliveryOrder,

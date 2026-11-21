@@ -41,6 +41,7 @@ import { useCart, FoodCustomization } from "@/components/Cart";
 import { toast } from "@/lib/notify";
 import Img from "@/components/Img";
 import NimzaLogo from "@/components/NimzaLogo";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 const FoodCustomizationModal = dynamic(() => import("@/components/FoodCustomizationModal"), {
   ssr: false,
@@ -83,7 +84,8 @@ export default function Cart() {
   const [deliveryAddress, setDeliveryAddress] = useState("Penthouse 4B, 742 Evergreen Promenade");
   const [deliveryCity, setDeliveryCity] = useState("Embassy Gardens & Diplomatic Quarter");
   const [deliveryCustomerName, setDeliveryCustomerName] = useState("Lord Sterling");
-  const [customerPhone, setCustomerPhone] = useState("+1 (555) 892-4100");
+  const [deliveryCountryCode, setDeliveryCountryCode] = useState("+92");
+  const [customerPhone, setCustomerPhone] = useState("03001234567");
   const [deliveryNote, setDeliveryNote] = useState("");
 
   // Detect table from QR code scan or session
@@ -712,15 +714,13 @@ export default function Cart() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal/70 mb-1">
-                          Delivery Contact Phone
-                        </label>
-                        <input
-                          type="tel"
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          className="inp !text-xs font-semibold font-mono"
+                        <PhoneInputWithCountry
+                          countryCode={deliveryCountryCode}
+                          onCountryCodeChange={setDeliveryCountryCode}
+                          phoneNumber={customerPhone}
+                          onPhoneNumberChange={setCustomerPhone}
+                          label="Delivery Contact Phone"
+                          placeholder="03001234567"
                         />
                       </div>
                     </div>
