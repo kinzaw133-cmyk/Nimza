@@ -23,8 +23,9 @@ import {
   Utensils,
   ChevronRight,
   Sparkles,
+  Crown,
+  Wine,
 } from "lucide-react";
-import NimzaLogo from "@/components/NimzaLogo";
 
 // Realistic baseline analytics data
 interface DailyTrend {
@@ -51,25 +52,25 @@ const TREND_DATA_30D: DailyTrend[] = [
 ];
 
 const CATEGORY_SALES = [
-  { category: "Prime Meats & Steaks", revenue: 9840, share: 36, color: "#D4AF37" },
-  { category: "Artisanal Handmade Pasta", revenue: 7280, share: 27, color: "#8C6D2D" },
-  { category: "Mediterranean Seafood", revenue: 4320, share: 16, color: "#1F241F" },
-  { category: "Sommelier Wine & Cellar", revenue: 3250, share: 12, color: "#B8860B" },
-  { category: "Tasting Desserts & Digestifs", revenue: 2460, share: 9, color: "#E5C158" },
+  { category: "Prime Meats & Steaks", revenue: 9840, share: 36, color: "#B99A5B", bgClass: "bg-[#B99A5B]" },
+  { category: "Artisanal Handmade Pasta", revenue: 7280, share: 27, color: "#8C6D2D", bgClass: "bg-[#8C6D2D]" },
+  { category: "Mediterranean Seafood", revenue: 4320, share: 16, color: "#2A5A44", bgClass: "bg-[#2A5A44]" },
+  { category: "Sommelier Wine & Cellar", revenue: 3250, share: 12, color: "#9A5830", bgClass: "bg-[#9A5830]" },
+  { category: "Tasting Desserts & Digestifs", revenue: 2460, share: 9, color: "#D8B467", bgClass: "bg-[#D8B467]" },
 ];
 
 const HOURLY_DISTRIBUTION = [
   { hour: "12 PM", percent: 45, label: "Lunch Rush" },
   { hour: "1 PM", percent: 75, label: "Peak Lunch" },
   { hour: "2 PM", percent: 50, label: "Afternoon" },
-  { hour: "3 PM", percent: 20, label: "Quiet" },
-  { hour: "4 PM", percent: 15, label: "Prep" },
-  { hour: "5 PM", percent: 35, label: "Aperitivo" },
+  { hour: "3 PM", percent: 20, label: "Quiet Hours" },
+  { hour: "4 PM", percent: 15, label: "Mise en Place" },
+  { hour: "5 PM", percent: 35, label: "Aperitivo Ritual" },
   { hour: "6 PM", percent: 65, label: "Early Dinner" },
   { hour: "7 PM", percent: 92, label: "Dinner Rush" },
-  { hour: "8 PM", percent: 100, label: "Max Capacity" },
-  { hour: "9 PM", percent: 85, label: "Late Dining" },
-  { hour: "10 PM", percent: 40, label: "Dessert & Wine" },
+  { hour: "8 PM", percent: 100, label: "Peak Brigade Capacity" },
+  { hour: "9 PM", percent: 85, label: "Late Night Dining" },
+  { hour: "10 PM", percent: 40, label: "Digestifs & Dessert" },
 ];
 
 const TOP_DISHES = [
@@ -97,12 +98,12 @@ export default function SalesAnalyticsPage() {
   const maxBarRevenue = Math.max(...trendData.map((d) => d.revenue));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* HEADER BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-sand">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-charcoal shadow-2xs mb-2">
-            <BarChart3 size={12} className="text-gold" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-sand bg-white px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-charcoal shadow-2xs mb-2">
+            <BarChart3 size={13} className="text-gold" />
             <span>Executive Gastronomy Intelligence</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#1F241F]">
@@ -119,7 +120,9 @@ export default function SalesAnalyticsPage() {
             <button
               onClick={() => setTimeframe("7d")}
               className={`px-3.5 py-1.5 rounded-full transition-all ${
-                timeframe === "7d" ? "bg-white text-charcoal shadow-xs" : "text-charcoal/60"
+                timeframe === "7d"
+                  ? "bg-[#1F241F] text-gold shadow-xs"
+                  : "text-charcoal/70 hover:text-[#1F241F]"
               }`}
             >
               Last 7 Days
@@ -127,7 +130,9 @@ export default function SalesAnalyticsPage() {
             <button
               onClick={() => setTimeframe("30d")}
               className={`px-3.5 py-1.5 rounded-full transition-all ${
-                timeframe === "30d" ? "bg-white text-charcoal shadow-xs" : "text-charcoal/60"
+                timeframe === "30d"
+                  ? "bg-[#1F241F] text-gold shadow-xs"
+                  : "text-charcoal/70 hover:text-[#1F241F]"
               }`}
             >
               Last 30 Days
@@ -147,129 +152,180 @@ export default function SalesAnalyticsPage() {
       {/* 4 TOP LEVEL FINANCIAL KPIS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Gross Revenue */}
-        <div className="p-6 rounded-3xl bg-white border border-sand shadow-xs">
+        <div className="p-6 rounded-3xl bg-white border border-sand/80 shadow-xs hover:border-gold/50 transition-all">
           <div className="flex items-center justify-between text-xs text-charcoal/60 mb-2">
-            <span className="font-bold uppercase tracking-wider">Gross Revenue</span>
-            <DollarSign size={16} className="text-gold" />
+            <span className="font-bold uppercase tracking-wider text-[11px]">Gross Revenue</span>
+            <div className="w-8 h-8 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+              <DollarSign size={16} />
+            </div>
           </div>
-          <p className="font-serif text-3xl sm:text-4xl font-bold text-olive">
+          <p className="font-serif text-3xl sm:text-4xl font-bold text-[#1F241F]">
             ${totalRevenue.toLocaleString()}
           </p>
-          <div className="flex items-center justify-between text-xs mt-2 text-charcoal/50">
+          <div className="flex items-center justify-between text-xs mt-2.5 text-charcoal/60 font-mono">
             <span>₨ {(totalRevenue * 280).toLocaleString()} PKR</span>
-            <span className="inline-flex items-center gap-0.5 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-0.5 text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px]">
               <TrendingUp size={11} /> +18.4%
             </span>
           </div>
         </div>
 
         {/* Total Orders */}
-        <div className="p-6 rounded-3xl bg-white border border-sand shadow-xs">
+        <div className="p-6 rounded-3xl bg-white border border-sand/80 shadow-xs hover:border-gold/50 transition-all">
           <div className="flex items-center justify-between text-xs text-charcoal/60 mb-2">
-            <span className="font-bold uppercase tracking-wider">Orders Fulfilled</span>
-            <ShoppingBag size={16} className="text-gold" />
+            <span className="font-bold uppercase tracking-wider text-[11px]">Orders Fulfilled</span>
+            <div className="w-8 h-8 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+              <ShoppingBag size={16} />
+            </div>
           </div>
           <p className="font-serif text-3xl sm:text-4xl font-bold text-[#1F241F]">
             {totalOrders.toLocaleString()}
           </p>
-          <div className="flex items-center justify-between text-xs mt-2 text-charcoal/50">
+          <div className="flex items-center justify-between text-xs mt-2.5 text-charcoal/60 font-mono">
             <span>Avg {Math.round(totalOrders / trendData.length)} / day</span>
-            <span className="inline-flex items-center gap-0.5 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-0.5 text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px]">
               <TrendingUp size={11} /> +12.1%
             </span>
           </div>
         </div>
 
         {/* Average Order Value */}
-        <div className="p-6 rounded-3xl bg-white border border-sand shadow-xs">
+        <div className="p-6 rounded-3xl bg-white border border-sand/80 shadow-xs hover:border-gold/50 transition-all">
           <div className="flex items-center justify-between text-xs text-charcoal/60 mb-2">
-            <span className="font-bold uppercase tracking-wider">Avg Order Value (AOV)</span>
-            <Sparkles size={16} className="text-gold" />
+            <span className="font-bold uppercase tracking-wider text-[11px]">Avg Order Value (AOV)</span>
+            <div className="w-8 h-8 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+              <Sparkles size={16} />
+            </div>
           </div>
           <p className="font-serif text-3xl sm:text-4xl font-bold text-[#1F241F]">
             ${avgOrderValue}
           </p>
-          <div className="flex items-center justify-between text-xs mt-2 text-charcoal/50">
+          <div className="flex items-center justify-between text-xs mt-2.5 text-charcoal/60 font-mono">
             <span>₨ {Math.round(Number(avgOrderValue) * 280)} PKR</span>
-            <span className="text-emerald-700 font-bold">+5.3% vs avg</span>
+            <span className="inline-flex items-center gap-0.5 text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px]">
+              +5.3% vs avg
+            </span>
           </div>
         </div>
 
         {/* Dining vs Delivery Split */}
-        <div className="p-6 rounded-3xl bg-white border border-sand shadow-xs">
+        <div className="p-6 rounded-3xl bg-white border border-sand/80 shadow-xs hover:border-gold/50 transition-all">
           <div className="flex items-center justify-between text-xs text-charcoal/60 mb-2">
-            <span className="font-bold uppercase tracking-wider">Fulfillment Mix</span>
-            <Truck size={16} className="text-gold" />
+            <span className="font-bold uppercase tracking-wider text-[11px]">Fulfillment Mix</span>
+            <div className="w-8 h-8 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+              <Truck size={16} />
+            </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-serif text-2xl font-bold text-olive">68%</span>
+            <span className="font-serif text-2xl font-bold text-[#1F241F]">68%</span>
             <span className="text-xs text-charcoal/60">Dine-In</span>
-            <span className="font-serif text-2xl font-bold text-gold ml-2">32%</span>
+            <span className="font-serif text-2xl font-bold text-[#8C6D2D] ml-2">32%</span>
             <span className="text-xs text-charcoal/60">Delivery</span>
           </div>
-          <div className="w-full h-2 rounded-full bg-sand/40 overflow-hidden mt-3 flex">
-            <div className="bg-olive h-full" style={{ width: "68%" }} />
+          <div className="w-full h-2.5 rounded-full bg-sand/40 overflow-hidden mt-3 flex">
+            <div className="bg-[#1F241F] h-full" style={{ width: "68%" }} />
             <div className="bg-gold h-full" style={{ width: "32%" }} />
           </div>
         </div>
       </div>
 
-      {/* SECTION 2: INTERACTIVE SVG REVENUE TREND CHART */}
+      {/* SECTION 2: LUXURY REVENUE TRAJECTORY BAR CHART (MATCHED WITH HERO PALETTE) */}
       <div className="p-6 sm:p-8 rounded-[2.5rem] bg-white border-2 border-sand shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-sand">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-sand">
           <div>
+            <div className="inline-flex items-center gap-1.5 text-gold text-xs font-bold uppercase tracking-widest mb-1">
+              <Sparkles size={13} />
+              <span>Gastronomy Financial Flow</span>
+            </div>
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1F241F]">
               Revenue Trajectory ({timeframe === "7d" ? "Past 7 Days" : "Past 30 Days"})
             </h3>
             <p className="text-xs text-charcoal/60 mt-0.5">
-              Daily revenue breakdown in USD with volume tracking bars.
+              Daily revenue breakdown in USD with customer volume tracking bars.
             </p>
           </div>
-          <span className="text-xs font-mono font-bold text-olive bg-sand/30 px-3 py-1 rounded-full border border-sand">
-            Peak Day: ${maxBarRevenue.toLocaleString()}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-[#8C6D2D] bg-gold/15 px-3 py-1.5 rounded-full border border-gold/40">
+              Peak Day: ${maxBarRevenue.toLocaleString()}
+            </span>
+          </div>
         </div>
 
-        {/* Pure React / SVG Bar Chart */}
-        <div className="relative pt-6">
-          <div className="grid grid-cols-7 gap-3 sm:gap-6 items-end h-56 sm:h-64 border-b border-sand/80 pb-2">
+        {/* Clean Luxury Gold Bar Chart */}
+        <div className="relative pt-10 px-2 sm:px-6">
+          <div className="grid grid-cols-7 gap-3 sm:gap-6 items-end h-64 sm:h-72 border-b border-sand/80 pb-3">
             {trendData.map((item, idx) => {
               const heightPct = Math.round((item.revenue / maxBarRevenue) * 100);
+              const isPeak = item.revenue === maxBarRevenue;
 
               return (
-                <div key={idx} className="flex flex-col items-center justify-end h-full group">
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono font-bold text-charcoal bg-sand/40 px-2 py-0.5 rounded-md mb-2 shadow-2xs">
-                    ${item.revenue.toLocaleString()}
-                  </span>
+                <div key={idx} className="flex flex-col items-center justify-end h-full group relative">
+                  {/* Revenue tag above bar (always clear & never cut off) */}
+                  <div className="mb-2 text-center transition-transform group-hover:-translate-y-1">
+                    <span
+                      className={`inline-block text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                        isPeak
+                          ? "bg-[#1F241F] text-gold border-[#1F241F] shadow-xs"
+                          : "bg-sand/30 text-charcoal/80 border-sand/70 group-hover:bg-gold/20 group-hover:text-[#8C6D2D] group-hover:border-gold/50"
+                      }`}
+                    >
+                      ${item.revenue.toLocaleString()}
+                    </span>
+                  </div>
 
+                  {/* Luminous Gastronomy Gold Bar matching Hero Section */}
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${heightPct}%` }}
-                    transition={{ duration: 0.6, delay: idx * 0.08 }}
-                    className="w-full max-w-[48px] rounded-t-xl bg-gradient-to-t from-olive via-gold to-gold-light group-hover:brightness-110 shadow-sm relative"
-                  />
+                    transition={{ duration: 0.7, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    className={`w-full max-w-[52px] rounded-t-2xl transition-all relative shadow-sm ${
+                      isPeak
+                        ? "bg-gradient-to-t from-[#B99A5B] via-[#C8A86B] to-[#F3DE9A] border-t-2 border-white ring-2 ring-gold/40 shadow-gold/20"
+                        : "bg-gradient-to-t from-[#B99A5B]/80 via-[#C8A86B]/90 to-[#E5C578] hover:from-[#B99A5B] hover:to-[#F3DE9A] hover:scale-102"
+                    }`}
+                  >
+                    {/* Subtle Top Gold Highlight */}
+                    <div className="absolute top-0 inset-x-0 h-1 bg-white/40 rounded-t-2xl" />
+                  </motion.div>
 
-                  <span className="text-xs font-bold text-charcoal/70 mt-3 font-mono">
+                  {/* Day Label */}
+                  <span className="text-xs font-bold text-charcoal mt-3 font-mono">
                     {item.day}
                   </span>
-                  <span className="text-[10px] text-charcoal/40 font-mono">
+                  {/* Orders Ticket Count */}
+                  <span className="text-[10px] text-charcoal/50 font-mono mt-0.5">
                     {item.orders} tix
                   </span>
                 </div>
               );
             })}
           </div>
+
+          {/* Bottom Footnote Indicator */}
+          <div className="flex items-center justify-between pt-3 text-[11px] text-charcoal/60">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#B99A5B]" />
+              <span>Standard Daily Revenue Volume</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#1F241F] border border-gold" />
+              <span className="font-bold text-[#1F241F]">Highest Grossing Period (Saturday Rush)</span>
+            </span>
+          </div>
         </div>
       </div>
 
       {/* SECTION 3: CATEGORY SPLIT & HOURLY HEATMAP */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Category Contribution */}
+        {/* Category Contribution (Harmonized Culinary Palette) */}
         <div className="lg:col-span-6 p-6 sm:p-8 rounded-[2.5rem] bg-white border border-sand shadow-sm space-y-5">
           <div className="pb-3 border-b border-sand">
-            <h3 className="font-serif text-xl font-bold text-[#1F241F]">
-              Sales by Gastronomy Category
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-xl font-bold text-[#1F241F]">
+                Sales by Gastronomy Category
+              </h3>
+              <Utensils size={17} className="text-gold" />
+            </div>
             <p className="text-xs text-charcoal/60 mt-0.5">
               Revenue distribution across core culinary sections.
             </p>
@@ -279,19 +335,33 @@ export default function SalesAnalyticsPage() {
             {CATEGORY_SALES.map((cat, i) => (
               <div key={i} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-semibold text-charcoal">
-                  <span>{cat.category}</span>
-                  <span className="font-mono text-olive font-bold">
-                    ${cat.revenue.toLocaleString()} ({cat.share}%)
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span>{cat.category}</span>
+                  </div>
+                  <span className="font-mono text-[#1F241F] font-bold">
+                    ${cat.revenue.toLocaleString()} <span className="text-charcoal/50 font-normal">({cat.share}%)</span>
                   </span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-sand/30 overflow-hidden">
-                  <div
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${cat.share}%` }}
+                    transition={{ duration: 0.8, delay: i * 0.1 }}
                     className="h-full rounded-full"
-                    style={{ width: `${cat.share}%`, backgroundColor: cat.color }}
+                    style={{ backgroundColor: cat.color }}
                   />
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="pt-3 border-t border-sand flex items-center justify-between text-[11px] text-charcoal/60">
+            <span>Leading Course: <strong>Prime Meats &amp; Steaks (36%)</strong></span>
+            <span>Secondary: <strong>Handmade Pasta (27%)</strong></span>
           </div>
         </div>
 
@@ -306,29 +376,60 @@ export default function SalesAnalyticsPage() {
                 Hourly traffic density based on completed kitchen tickets.
               </p>
             </div>
-            <Clock size={16} className="text-gold" />
+            <div className="w-8 h-8 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+              <Clock size={16} />
+            </div>
           </div>
 
-          <div className="grid grid-cols-11 gap-1.5 items-end h-40 pt-4">
-            {HOURLY_DISTRIBUTION.map((slot, i) => (
-              <div key={i} className="flex flex-col items-center justify-end h-full group" title={`${slot.hour}: ${slot.label}`}>
+          {/* Clean Gold-Scale Hourly Bars */}
+          <div className="grid grid-cols-11 gap-1.5 items-end h-44 pt-6 px-1">
+            {HOURLY_DISTRIBUTION.map((slot, i) => {
+              const isPeak = slot.percent >= 90;
+              const isBusy = slot.percent >= 60 && slot.percent < 90;
+              const isModerate = slot.percent >= 30 && slot.percent < 60;
+
+              return (
                 <div
-                  className="w-full rounded-t-md transition-all group-hover:scale-105"
-                  style={{
-                    height: `${slot.percent}%`,
-                    backgroundColor: slot.percent > 70 ? "#8C6D2D" : slot.percent > 40 ? "#D4AF37" : "#E5E1D8",
-                  }}
-                />
-                <span className="text-[9px] font-mono text-charcoal/60 mt-1 truncate">
-                  {slot.hour.replace(" ", "")}
-                </span>
-              </div>
-            ))}
+                  key={i}
+                  className="flex flex-col items-center justify-end h-full group relative cursor-default"
+                  title={`${slot.hour}: ${slot.label} (${slot.percent}% load)`}
+                >
+                  {/* Tooltip on hover */}
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 text-[9px] font-mono font-bold text-white bg-[#1F241F] px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap z-10 pointer-events-none">
+                    {slot.percent}%
+                  </span>
+
+                  <div
+                    className={`w-full rounded-t-lg transition-all group-hover:brightness-110 ${
+                      isPeak
+                        ? "bg-[#8C6D2D] shadow-xs"
+                        : isBusy
+                        ? "bg-[#B99A5B]"
+                        : isModerate
+                        ? "bg-[#D4B574]/80"
+                        : "bg-[#E5E0D8]"
+                    }`}
+                    style={{
+                      height: `${slot.percent}%`,
+                    }}
+                  />
+                  <span className="text-[9px] font-mono text-charcoal/60 mt-2 truncate">
+                    {slot.hour.replace(" ", "")}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="flex items-center justify-between pt-2 text-[11px] text-charcoal/50 border-t border-sand">
-            <span>Primary Peak: <strong>8:00 PM (100% Brigade Load)</strong></span>
-            <span>Lunch Peak: <strong>1:00 PM (75% Load)</strong></span>
+          <div className="flex items-center justify-between pt-2 text-[11px] text-charcoal/60 border-t border-sand">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#8C6D2D]" />
+              <span>Dinner Peak: <strong>8:00 PM (100% Brigade)</strong></span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#B99A5B]" />
+              <span>Lunch Peak: <strong>1:00 PM (75% Load)</strong></span>
+            </span>
           </div>
         </div>
       </div>
@@ -337,6 +438,10 @@ export default function SalesAnalyticsPage() {
       <div className="rounded-[2.5rem] bg-white border-2 border-sand p-6 sm:p-8 shadow-sm">
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-sand">
           <div>
+            <div className="inline-flex items-center gap-1.5 text-gold text-xs font-bold uppercase tracking-widest mb-1">
+              <Award size={13} />
+              <span>Culinary Highlights</span>
+            </div>
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1F241F]">
               Top Revenue-Generating Dishes
             </h3>
@@ -344,18 +449,20 @@ export default function SalesAnalyticsPage() {
               Ranked by aggregate ticket revenue and sales growth rate.
             </p>
           </div>
-          <Award size={20} className="text-gold" />
+          <div className="w-9 h-9 rounded-2xl bg-gold/15 border border-gold/40 flex items-center justify-center text-[#8C6D2D]">
+            <Crown size={18} />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-sand text-charcoal/50 uppercase font-mono tracking-wider">
+              <tr className="border-b border-sand text-charcoal/50 uppercase font-mono tracking-wider text-[10px]">
                 <th className="py-3 px-3">Rank &amp; Dish</th>
                 <th className="py-3 px-3">Category</th>
                 <th className="py-3 px-3 text-right">Units Sold</th>
                 <th className="py-3 px-3 text-right">Total Revenue</th>
-                <th className="py-3 px-3 text-right">Momentum</th>
+                <th className="py-3 px-3 text-right">Growth Momentum</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-sand/40">
@@ -363,23 +470,33 @@ export default function SalesAnalyticsPage() {
                 <tr key={idx} className="hover:bg-sand/15 transition-colors">
                   <td className="py-3.5 px-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="font-mono font-bold text-xs text-gold">#{idx + 1}</span>
+                      <span
+                        className={`font-mono font-bold text-xs px-2 py-0.5 rounded-md ${
+                          idx === 0
+                            ? "bg-gold text-[#1F241F]"
+                            : idx === 1
+                            ? "bg-sand text-charcoal"
+                            : "bg-sand/40 text-charcoal/70"
+                        }`}
+                      >
+                        #{idx + 1}
+                      </span>
                       <span className="font-serif font-bold text-sm text-[#1F241F]">{dish.name}</span>
                     </div>
                   </td>
                   <td className="py-3.5 px-3">
-                    <span className="px-2 py-0.5 rounded-full bg-sand/30 text-[10px] font-semibold text-charcoal/70">
+                    <span className="px-2.5 py-0.5 rounded-full bg-sand/30 border border-sand/70 text-[10px] font-semibold text-charcoal/80">
                       {dish.category}
                     </span>
                   </td>
                   <td className="py-3.5 px-3 text-right font-mono font-bold text-charcoal/80">
                     {dish.unitsSold} plates
                   </td>
-                  <td className="py-3.5 px-3 text-right font-serif font-bold text-sm text-olive">
+                  <td className="py-3.5 px-3 text-right font-serif font-bold text-sm text-[#1F241F]">
                     ${dish.revenue.toLocaleString()}
                   </td>
                   <td className="py-3.5 px-3 text-right">
-                    <span className="inline-flex items-center gap-0.5 font-bold font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    <span className="inline-flex items-center gap-0.5 font-bold font-mono text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px]">
                       {dish.growth}
                     </span>
                   </td>

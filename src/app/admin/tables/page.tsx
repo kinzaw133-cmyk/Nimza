@@ -29,7 +29,7 @@ import {
   Check,
   QrCode,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
@@ -170,30 +170,49 @@ export default function AdminTablesPage() {
   const loadData = async () => {
     setIsRefreshing(true);
 
-    // 1. Load Tables from localStorage or Supabase
+    // 1. Load Tables from localStorage or seed defaults
     try {
       const storedTables = localStorage.getItem("nimza_admin_tables");
       if (storedTables) {
-        setTables(JSON.parse(storedTables));
+        const parsed = JSON.parse(storedTables);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTables(parsed);
+        } else {
+          setTables(DEFAULT_ADMIN_TABLES);
+          localStorage.setItem("nimza_admin_tables", JSON.stringify(DEFAULT_ADMIN_TABLES));
+        }
+      } else {
+        localStorage.setItem("nimza_admin_tables", JSON.stringify(DEFAULT_ADMIN_TABLES));
       }
     } catch {}
 
     // 2. Load Reservations
     try {
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order("reserved_at", { ascending: false });
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase
+          .from("reservations")
+          .select("*")
+          .order("reserved_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        setReservations(data as any);
-      } else {
-        const storedRes = localStorage.getItem("nimza-my-reservations");
-        if (storedRes) {
-          const parsed = JSON.parse(storedRes);
-          if (parsed.length > 0) setReservations(parsed);
+        if (!error && data && data.length > 0) {
+          setReservations(data as any);
+          return;
         }
       }
+
+      const storedRes = localStorage.getItem("nimza-my-reservations");
+      if (storedRes) {
+        const parsed = JSON.parse(storedRes);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReservations(parsed);
+          return;
+        }
+      }
+
+      setReservations(DEFAULT_ADMIN_RESERVATIONS);
+      try {
+        localStorage.setItem("nimza-my-reservations", JSON.stringify(DEFAULT_ADMIN_RESERVATIONS));
+      } catch {}
     } catch {
       // Fallback stays
     } finally {

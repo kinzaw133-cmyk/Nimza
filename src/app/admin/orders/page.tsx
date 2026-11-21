@@ -22,7 +22,7 @@ import {
   Smartphone,
   Landmark,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
@@ -66,15 +66,25 @@ export default function AdminOrders() {
 
   const loadData = async () => {
     try {
-      const ordersRes = await supabase
-        .from("orders")
-        .select("*,order_items(quantity,menu_items(name,price))")
-        .order("id", { ascending: false });
+      let remoteOrders: any[] = [];
+      let remoteRes: any[] = [];
 
-      const resRes = await supabase
-        .from("reservations")
-        .select("*")
-        .order("reserved_at", { ascending: true });
+      if (isSupabaseConfigured) {
+        try {
+          const ordersRes = await supabase
+            .from("orders")
+            .select("*,order_items(quantity,menu_items(name,price))")
+            .order("id", { ascending: false });
+
+          const resRes = await supabase
+            .from("reservations")
+            .select("*")
+            .order("reserved_at", { ascending: true });
+
+          remoteOrders = ordersRes.data || [];
+          remoteRes = resRes.data || [];
+        } catch {}
+      }
 
       let localOrders: any[] = [];
       try {
@@ -83,24 +93,87 @@ export default function AdminOrders() {
 
       const mergedMap = new Map<number, any>();
       localOrders.forEach((o) => mergedMap.set(o.id, o));
-      (ordersRes.data || []).forEach((o) => mergedMap.set(o.id, o));
+      remoteOrders.forEach((o) => mergedMap.set(o.id, o));
 
       if (mergedMap.size === 0) {
-        mergedMap.set(1042, {
-          id: 1042,
-          created_at: new Date().toISOString(),
-          status: "Pending",
-          total: 47.0,
-          table_no: 3,
-          order_items: [
-            { quantity: 1, menu_items: { name: "Truffle Tagliatelle", price: 18.0 } },
-            { quantity: 1, menu_items: { name: "Grilled Ribeye Prime", price: 29.0 } },
-          ],
-        });
+        const DEMO_ORDERS = [
+          {
+            id: 1045,
+            created_at: new Date(Date.now() - 12 * 60000).toISOString(),
+            status: "Pending",
+            total: 72.0,
+            table_no: 1,
+            payment_method: "Credit Card (Split 2)",
+            notes: "Lord Sterling - Window banquette, extra shaved truffles",
+            order_items: [
+              { quantity: 1, menu_items: { name: "Truffle Tagliatelle", price: 28.0 } },
+              { quantity: 1, menu_items: { name: "Heritage Dry-Aged Ribeye", price: 36.0 } },
+              { quantity: 1, menu_items: { name: "Amalfi Sparkling Nectar", price: 8.0 } },
+            ],
+          },
+          {
+            id: 1044,
+            created_at: new Date(Date.now() - 25 * 60000).toISOString(),
+            status: "Preparing",
+            total: 58.5,
+            table_no: 3,
+            payment_method: "Cash (Split 3)",
+            notes: "Countess Elena - Medium rare steaks, warm plates",
+            order_items: [
+              { quantity: 2, menu_items: { name: "Pan-Seared Herb Salmon", price: 24.5 } },
+              { quantity: 1, menu_items: { name: "Garden Harvest Bowl", price: 9.5 } },
+            ],
+          },
+          {
+            id: 1043,
+            created_at: new Date(Date.now() - 40 * 60000).toISOString(),
+            status: "Ready",
+            total: 62.0,
+            table_no: "Fleet Delivery",
+            payment_method: "Cash on Delivery",
+            notes: "Delivery Order for Sarah Jenkins (Assigned Courier: Marco Rossi)",
+            order_items: [
+              { quantity: 1, menu_items: { name: "Artisanal Burrata Pugliese", price: 18.0 } },
+              { quantity: 1, menu_items: { name: "Wood-Fired Margherita", price: 16.0 } },
+              { quantity: 2, menu_items: { name: "Molten Valrhona Sphere", price: 14.0 } },
+            ],
+          },
+          {
+            id: 1042,
+            created_at: new Date(Date.now() - 75 * 60000).toISOString(),
+            status: "Delivered",
+            total: 185.0,
+            table_no: 11,
+            payment_method: "Amex Black Card",
+            notes: "Ambassador Vance - Chef's Counter VIP 5-Course Plating",
+            order_items: [
+              { quantity: 4, menu_items: { name: "Chef's Tasting Hearth Course", price: 35.0 } },
+              { quantity: 1, menu_items: { name: "Brunello di Montalcino 2015", price: 45.0 } },
+            ],
+          },
+          {
+            id: 1041,
+            created_at: new Date(Date.now() - 110 * 60000).toISOString(),
+            status: "Delivered",
+            total: 48.0,
+            table_no: 2,
+            payment_method: "Visa Corporate",
+            notes: "Sophia Delacroix - Window seating completed",
+            order_items: [
+              { quantity: 1, menu_items: { name: "Burrata Pugliese", price: 18.0 } },
+              { quantity: 1, menu_items: { name: "Wood-Fired Margherita", price: 16.0 } },
+              { quantity: 1, menu_items: { name: "Tiramisu al Mascarpone", price: 14.0 } },
+            ],
+          },
+        ];
+        DEMO_ORDERS.forEach((o) => mergedMap.set(o.id, o));
+        try {
+          localStorage.setItem("nimza_placed_orders", JSON.stringify(DEMO_ORDERS));
+        } catch {}
       }
 
       setOrders(Array.from(mergedMap.values()).sort((a, b) => b.id - a.id));
-      setReservations(resRes.data || []);
+      setReservations(remoteRes);
     } catch {
       // Local fallback
     }

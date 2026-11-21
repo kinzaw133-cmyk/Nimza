@@ -278,6 +278,59 @@ export default function KitchenDisplaySystem() {
         });
       }
 
+      if (orderMap.size === 0) {
+        const DEMO_KITCHEN_ORDERS: KitchenOrder[] = [
+          {
+            id: 1045,
+            created_at: new Date(Date.now() - 8 * 60000).toISOString(),
+            status: "Pending",
+            total: 72.0,
+            table_no: 1,
+            payment_method: "Credit Card (Split 2)",
+            payment_status: "Paid",
+            notes: "Lord Sterling - Window banquette, extra shaved truffles",
+            customer_name: "Lord Sterling",
+            order_items: [
+              { quantity: 1, menu_items: { name: "Truffle Tagliatelle", price: 28.0 } },
+              { quantity: 1, menu_items: { name: "Heritage Dry-Aged Prime Ribeye", price: 36.0 } },
+              { quantity: 1, menu_items: { name: "Amalfi Sparkling Nectar", price: 8.0 } },
+            ],
+          },
+          {
+            id: 1044,
+            created_at: new Date(Date.now() - 18 * 60000).toISOString(),
+            status: "Preparing",
+            total: 58.5,
+            table_no: 3,
+            payment_method: "Cash (Split 3)",
+            payment_status: "Pending",
+            notes: "Countess Elena - Medium rare steaks, warm plates",
+            customer_name: "Countess Elena",
+            order_items: [
+              { quantity: 2, menu_items: { name: "Pan-Seared Herb Salmon", price: 24.5 } },
+              { quantity: 1, menu_items: { name: "Garden Harvest Bowl", price: 9.5 } },
+            ],
+          },
+          {
+            id: 1043,
+            created_at: new Date(Date.now() - 32 * 60000).toISOString(),
+            status: "Ready",
+            total: 62.0,
+            table_no: "Fleet Delivery",
+            payment_method: "Cash on Delivery",
+            payment_status: "Pending",
+            notes: "Delivery Order for Sarah Jenkins (Assigned Courier: Marco Rossi)",
+            customer_name: "Sarah Jenkins",
+            order_items: [
+              { quantity: 1, menu_items: { name: "Artisanal Burrata Pugliese", price: 18.0 } },
+              { quantity: 1, menu_items: { name: "Wood-Fired Margherita", price: 16.0 } },
+              { quantity: 2, menu_items: { name: "Molten Valrhona Sphere", price: 14.0 } },
+            ],
+          },
+        ];
+        DEMO_KITCHEN_ORDERS.forEach((o) => orderMap.set(o.id, o));
+      }
+
       const finalOrders = Array.from(orderMap.values()).sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
