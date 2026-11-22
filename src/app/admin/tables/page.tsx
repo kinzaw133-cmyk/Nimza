@@ -180,13 +180,32 @@ export default function AdminTablesPage() {
 
     // 2. Load Reservations
     try {
+      let combinedRes: any[] = [];
+
+      // A. Fetch from backend API
+      try {
+        const apiRes = await fetch("/api/reservations");
+        if (apiRes.ok) {
+          const { reservations } = await apiRes.json();
+          if (reservations && reservations.length > 0) {
+            combinedRes = reservations;
+          }
+        }
+      } catch {}
+
+      // B. Fetch from Supabase
       const { data, error } = await supabase
         .from("reservations")
         .select("*")
         .order("reserved_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        setReservations(data as any);
+        const map = new Map<number, any>();
+        combinedRes.forEach((r) => map.set(r.id, r));
+        data.forEach((r: any) => map.set(r.id, r));
+        setReservations(Array.from(map.values()));
+      } else if (combinedRes.length > 0) {
+        setReservations(combinedRes);
       } else {
         const storedRes = localStorage.getItem("nimza-my-reservations");
         if (storedRes) {

@@ -1,0 +1,22 @@
+[
+  {
+    "id": 768418,
+    "user_id": "test-admin-1795346114540",
+    "name": "Akash",
+    "phone": "03106789542",
+    "email": "Akashmanglani2@gmail.com",
+    "table_no": 3,
+    "guests": 1,
+    "reserved_at": "2026-12-10T12:30:00",
+    "section": "Window Terrace",
+    "notes": "Annual celebration",
+    "package_type": "standard",
+    "package_name": "Standard VIP Dining",
+    "package_price": 0,
+    "status": "Confirmed",
+    "booking_type": "table_reservation",
+    "qr_code": "NIMZA-VIP-768418",
+    "reminder_opt_in": true,
+    "created_at": "2026-11-22T11:18:07.173Z"
+  }
+]
