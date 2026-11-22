@@ -351,7 +351,7 @@ export default function ReservationsPage() {
         const { reservations } = await apiRes.json();
         if (reservations && reservations.length > 0) {
           reservations.forEach((r: any) => {
-            if (!user?.id || r.user_id === user.id || (savedPhone && r.phone === savedPhone)) {
+            if (isAdmin || !user?.id || r.user_id === user.id || (savedPhone && r.phone === savedPhone)) {
               if (!localList.some((x) => x.id === r.id)) {
                 localList.push(r);
               }
@@ -368,10 +368,16 @@ export default function ReservationsPage() {
           .select("*")
           .order("reserved_at", { ascending: false });
 
-        if (user?.id) {
-          query = query.eq("user_id", user.id);
-        } else if (savedPhone) {
-          query = query.eq("phone", savedPhone);
+        const isUuid = (val: any) =>
+          typeof val === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+        if (!isAdmin) {
+          if (user?.id && isUuid(user.id)) {
+            query = query.eq("user_id", user.id);
+          } else if (savedPhone) {
+            query = query.eq("phone", savedPhone);
+          }
         }
 
         const { data, error } = await query;

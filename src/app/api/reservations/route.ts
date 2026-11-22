@@ -83,10 +83,14 @@ export async function POST(request: NextRequest) {
 
     if (isSupabaseConfigured) {
       try {
+        const isUuid = (val: any) =>
+          typeof val === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
         const { error } = await supabase.from("reservations").upsert(
           {
             id: booking.id,
-            user_id: booking.user_id || null,
+            user_id: isUuid(booking.user_id) ? booking.user_id : null,
             name: booking.name,
             phone: booking.phone,
             email: booking.email,
