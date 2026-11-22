@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth, UserRole } from "@/lib/useAuth";
+import { PERMANENT_CREDENTIALS, PERMANENT_ADMIN_EMAILS, PERMANENT_CHEF_EMAILS } from "@/lib/authConfig";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
 import { Lock, ShieldAlert } from "lucide-react";
@@ -35,29 +36,45 @@ export default function RoleGuard({
     setMounted(true);
   }, []);
 
-  const isAuthorized = role && allowedRoles.includes(role);
+  let isAuthorized = Boolean(role && allowedRoles.includes(role));
+  if (role === "admin" && !PERMANENT_ADMIN_EMAILS.includes(user?.email || "")) {
+    isAuthorized = false;
+  }
+  if (role === "chef" && !PERMANENT_CHEF_EMAILS.includes(user?.email || "")) {
+    isAuthorized = false;
+  }
 
   useEffect(() => {
     if (mounted && !loading && !isAuthorized && !fallback) {
       const targetRole = requiredRoleName || allowedRoles[0] || "admin";
-      const dest =
-        redirectTo ||
-        `/login?role=${encodeURIComponent(targetRole)}&redirect=${encodeURIComponent(
-          pathname || "/"
-        )}`;
+      let dest = redirectTo;
+      if (!dest) {
+        if (targetRole === "admin") {
+          dest = `/admin`;
+        } else if (targetRole === "chef") {
+          dest = `/chef`;
+        } else {
+          dest = `/login?role=${encodeURIComponent(targetRole)}&redirect=${encodeURIComponent(
+            pathname || "/"
+          )}`;
+        }
+      }
 
       toast(
         `Restricted Access: ${targetRole.toUpperCase()} credentials required.`,
         "error"
       );
-      router.replace(dest);
+      window.location.href = dest;
     }
-  }, [mounted, loading, isAuthorized, fallback, redirectTo, requiredRoleName, allowedRoles, pathname, router]);
+  }, [mounted, loading, isAuthorized, fallback, redirectTo, requiredRoleName, allowedRoles, pathname]);
 
   // 1. Initial hydration loader (matches server and client perfectly before mount)
   if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6 select-none">
+      <div
+        className="min-h-screen bg-[#FAFAF8] text-[#1F241F] flex flex-col items-center justify-center p-6 select-none"
+        suppressHydrationWarning
+      >
         <div className="w-16 h-16 rounded-2xl bg-gold/15 border border-gold/40 p-2 flex items-center justify-center animate-pulse">
           <NimzaLogo variant="circle" size="sm" />
         </div>

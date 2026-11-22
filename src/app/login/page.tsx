@@ -24,7 +24,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
-import { verifyAdminCredentials, verifyChefCredentials, PERMANENT_CREDENTIALS } from "@/lib/authConfig";
+import { PERMANENT_CREDENTIALS, PERMANENT_ADMIN_EMAILS, PERMANENT_CHEF_EMAILS } from "@/lib/authConfig";
 import NimzaLogo from "@/components/NimzaLogo";
 
 export default function Login() {
@@ -55,78 +55,30 @@ export default function Login() {
 
     try {
       const cleanEmail = form.email.trim().toLowerCase();
-      const cleanPassword = form.password;
+      const cleanPassword = form.password.trim();
 
       // 1. Prevent public registration using protected permanent system accounts
       if (isRegister) {
-        if (cleanEmail === PERMANENT_CREDENTIALS.admin.email || cleanEmail === PERMANENT_CREDENTIALS.chef.email) {
+        if (PERMANENT_ADMIN_EMAILS.includes(cleanEmail) || PERMANENT_CHEF_EMAILS.includes(cleanEmail)) {
           toast("Permanent system accounts cannot be re-registered. Please sign in.", "error");
           setIsLoading(false);
           return;
         }
       }
 
-      // 2. Strict Administrator Authentication
-      const isTargetingAdmin =
-        requestedRole === "admin" ||
-        targetRedirect.startsWith("/admin") ||
-        cleanEmail === PERMANENT_CREDENTIALS.admin.email;
-
-      if (isTargetingAdmin) {
-        if (!verifyAdminCredentials(cleanEmail, cleanPassword)) {
-          if (cleanEmail !== PERMANENT_CREDENTIALS.admin.email) {
-            toast("Access Denied: Invalid Administrator email address.", "error");
-          } else {
-            toast("Access Denied: Incorrect Administrator password.", "error");
-          }
-          setIsLoading(false);
-          return;
-        }
-
-        // Verified Administrator Session
-        document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
-        const adminUser = {
-          id: "admin-master",
-          email: PERMANENT_CREDENTIALS.admin.email,
-          role: "admin" as const,
-          user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
-        };
-        setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
-        queryClient.setQueryData(AUTH_QUERY_KEY, { user: adminUser, role: "admin" });
-        toast("Welcome back, Executive Administrator!", "success");
-        router.replace(targetRedirect || "/admin");
+      // 2. Redirect Admin to dedicated Admin Panel Gate
+      if (PERMANENT_ADMIN_EMAILS.includes(cleanEmail)) {
+        toast("Please sign in directly through the Admin Panel.", "info");
+        window.location.href = "/admin";
+        setIsLoading(false);
         return;
       }
 
-      // 3. Strict Executive Chef Authentication
-      const isTargetingChef =
-        requestedRole === "chef" ||
-        targetRedirect.startsWith("/chef") ||
-        cleanEmail === PERMANENT_CREDENTIALS.chef.email;
-
-      if (isTargetingChef) {
-        if (!verifyChefCredentials(cleanEmail, cleanPassword)) {
-          if (cleanEmail !== PERMANENT_CREDENTIALS.chef.email) {
-            toast("Access Denied: Invalid Executive Chef email address.", "error");
-          } else {
-            toast("Access Denied: Incorrect Chef password.", "error");
-          }
-          setIsLoading(false);
-          return;
-        }
-
-        // Verified Executive Chef Session
-        document.cookie = `sb-user-role=chef; path=/; max-age=604800; SameSite=Lax`;
-        const chefUser = {
-          id: "chef-master",
-          email: PERMANENT_CREDENTIALS.chef.email,
-          role: "chef" as const,
-          user_metadata: { full_name: PERMANENT_CREDENTIALS.chef.name },
-        };
-        setTestSession("chef", PERMANENT_CREDENTIALS.chef.email, PERMANENT_CREDENTIALS.chef.name);
-        queryClient.setQueryData(AUTH_QUERY_KEY, { user: chefUser, role: "chef" });
-        toast("Welcome back, Executive Chef Elias Varga!", "success");
-        router.replace(targetRedirect || "/chef");
+      // 3. Redirect Chef to dedicated Chef Kitchen Gate
+      if (PERMANENT_CHEF_EMAILS.includes(cleanEmail)) {
+        toast("Please sign in directly through the Chef Station.", "info");
+        window.location.href = "/chef";
+        setIsLoading(false);
         return;
       }
 
@@ -187,10 +139,11 @@ export default function Login() {
       }
 
       const dest =
-        targetRedirect ||
-        (userRole === "delivery" ? "/driver" : "/");
+        targetRedirect && !targetRedirect.startsWith("/admin") && !targetRedirect.startsWith("/chef")
+          ? targetRedirect
+          : (userRole === "delivery" ? "/driver" : "/");
 
-      router.replace(dest);
+      window.location.href = dest;
     } catch (err: any) {
       toast(err.message || "Authentication completed", "info");
     } finally {
@@ -199,58 +152,14 @@ export default function Login() {
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      await supabase.auth.signOut();
+    } catch {}
     clearSession();
     queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Signed out successfully", "info");
-  };
-
-  // 1-Click Quick Role Sign In for the 3 core roles: Admin, Chef, and Customer
-  const handleQuickLogin = (targetRole: "admin" | "chef" | "customer") => {
-    if (targetRole === "admin") {
-      document.cookie = `sb-user-role=admin; path=/; max-age=604800; SameSite=Lax`;
-      const adminUser = {
-        id: "admin-master",
-        email: PERMANENT_CREDENTIALS.admin.email,
-        role: "admin" as const,
-        user_metadata: { full_name: PERMANENT_CREDENTIALS.admin.name },
-      };
-      setTestSession("admin", PERMANENT_CREDENTIALS.admin.email, PERMANENT_CREDENTIALS.admin.name);
-      queryClient.setQueryData(AUTH_QUERY_KEY, { user: adminUser, role: "admin" });
-      toast("Welcome back, Executive Administrator!", "success");
-      router.replace(targetRedirect || "/admin");
-      return;
-    }
-
-    if (targetRole === "chef") {
-      document.cookie = `sb-user-role=chef; path=/; max-age=604800; SameSite=Lax`;
-      const chefUser = {
-        id: "chef-master",
-        email: PERMANENT_CREDENTIALS.chef.email,
-        role: "chef" as const,
-        user_metadata: { full_name: PERMANENT_CREDENTIALS.chef.name },
-      };
-      setTestSession("chef", PERMANENT_CREDENTIALS.chef.email, PERMANENT_CREDENTIALS.chef.name);
-      queryClient.setQueryData(AUTH_QUERY_KEY, { user: chefUser, role: "chef" });
-      toast("Welcome back, Executive Chef Elias Varga!", "success");
-      router.replace(targetRedirect || "/chef");
-      return;
-    }
-
-    if (targetRole === "customer") {
-      document.cookie = `sb-user-role=customer; path=/; max-age=604800; SameSite=Lax`;
-      const custUser = {
-        id: "cust-01",
-        email: "sterling@example.com",
-        role: "customer" as const,
-        user_metadata: { full_name: "Lord Sterling" },
-      };
-      setTestSession("customer", "sterling@example.com", "Lord Sterling");
-      queryClient.setQueryData(AUTH_QUERY_KEY, { user: custUser, role: "customer" });
-      toast("Welcome back, Lord Sterling!", "success");
-      router.replace(targetRedirect || "/");
-      return;
-    }
+    window.location.href = "/";
   };
 
   return (
@@ -411,49 +320,8 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Quick Role Sign In: Admin, Chef, Customer */}
-          <div className="mt-8 pt-6 border-t border-sand/70">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#B99A5B]">
-                1-Click Quick Role Sign In
-              </span>
-              <span className="text-[10px] text-charcoal/40 font-mono">3 Roles</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("admin")}
-                className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 hover:bg-amber-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Executive Administrator"
-              >
-                <ShieldCheck size={18} className="text-amber-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Admin</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("chef")}
-                className="p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-900 hover:bg-orange-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Executive Chef Elias Varga"
-              >
-                <ChefHat size={18} className="text-orange-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Chef</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("customer")}
-                className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 hover:bg-emerald-600 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Dining Customer Lord Sterling"
-              >
-                <User size={18} className="text-emerald-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Customer</span>
-              </button>
-            </div>
-          </div>
-
           {/* Return to Public Site */}
-          <div className="mt-6 pt-5 border-t border-sand/60 text-center">
+          <div className="mt-8 pt-6 border-t border-sand/60 text-center">
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-gold transition-colors font-medium"

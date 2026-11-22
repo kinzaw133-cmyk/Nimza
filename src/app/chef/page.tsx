@@ -161,6 +161,17 @@ export default function KitchenDisplaySystem() {
     toast(next ? "KDS Audio Chimes: Enabled" : "KDS Audio Chimes: Muted", "info");
   };
 
+  // Dedicated Executive Chef Logout
+  const handleChefSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      await supabase.auth.signOut();
+    } catch {}
+    clearSession();
+    toast("Executive Chef signed out successfully", "info");
+    window.location.href = "/";
+  };
+
   // Fullscreen toggle for kitchen monitors and tablets
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -782,6 +793,17 @@ export default function KitchenDisplaySystem() {
               <ShieldCheck size={14} className="text-gold" />
               <span className="hidden sm:inline">Admin</span>
             </Link>
+
+            {/* Chef Station Sign Out */}
+            <button
+              type="button"
+              onClick={handleChefSignOut}
+              className="px-3 py-1.5 rounded-xl bg-rose-950/70 border border-rose-800/60 text-rose-300 hover:bg-rose-900 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-2xs"
+              title="Sign Out of Chef Station"
+            >
+              <LogOut size={13} />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
           </div>
         </div>
 

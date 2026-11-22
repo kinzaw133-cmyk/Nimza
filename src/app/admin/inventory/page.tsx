@@ -632,6 +632,16 @@ export default function AdminInventoryPage() {
     loadInventory();
   }, [loadInventory]);
 
+  // Safety self-heal: If items ever becomes empty, immediately seed INITIAL_INVENTORY_ITEMS
+  useEffect(() => {
+    if (items.length === 0) {
+      setItems(INITIAL_INVENTORY_ITEMS);
+      try {
+        localStorage.setItem("nimza_inventory_items", JSON.stringify(INITIAL_INVENTORY_ITEMS));
+      } catch {}
+    }
+  }, [items]);
+
   // One-click Reset / Restore Michelin Demo Stock
   const handleRestoreDefaultInventory = () => {
     setItems(INITIAL_INVENTORY_ITEMS);
