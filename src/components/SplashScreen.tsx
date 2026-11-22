@@ -2,57 +2,65 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
 
 interface SplashScreenProps {
   onComplete?: () => void;
   forceShow?: boolean;
 }
 
-export default function SplashScreen({ onComplete, forceShow = false }: SplashScreenProps) {
+export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState<boolean>(true);
   const [isDismissing, setIsDismissing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
 
   useEffect(() => {
-    // Check if user has already seen splash screen in this session
-    if (!forceShow && typeof window !== "undefined") {
-      const hasSeen = sessionStorage.getItem("nimza_splash_seen");
-      if (hasSeen === "true") {
-        setIsVisible(false);
-        onComplete?.();
-        return;
-      }
-    }
+    // Stepped progression exactly as required: 0 -> 30 -> 60 -> 90 -> 100 -> complete
+    setProgress(0);
 
-    // Smooth, accelerated percentage progression (~900ms for instant premium response)
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            triggerDismiss();
-          }, 150);
-          return 100;
-        }
-        // Slightly non-linear acceleration for natural fast feel
-        const step = prev < 30 ? 3.2 : prev < 70 ? 4.8 : 3.6;
-        return Math.min(100, prev + step);
-      });
-    }, 20);
+    const timeouts: NodeJS.Timeout[] = [];
 
-    return () => clearInterval(interval);
-  }, [forceShow]);
+    // Stage 1: 0% -> at start (0ms)
+    // Stage 2: 30% -> at 400ms
+    const t1 = setTimeout(() => {
+      setProgress(30);
+    }, 400);
+    timeouts.push(t1);
+
+    // Stage 3: 60% -> at 850ms
+    const t2 = setTimeout(() => {
+      setProgress(60);
+    }, 850);
+    timeouts.push(t2);
+
+    // Stage 4: 90% -> at 1300ms
+    const t3 = setTimeout(() => {
+      setProgress(90);
+    }, 1300);
+    timeouts.push(t3);
+
+    // Stage 5: 100% -> at 1750ms
+    const t4 = setTimeout(() => {
+      setProgress(100);
+    }, 1750);
+    timeouts.push(t4);
+
+    // Stage 6: Fade out and dismiss after showing 100%
+    const t5 = setTimeout(() => {
+      triggerDismiss();
+    }, 2250);
+    timeouts.push(t5);
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, []);
 
   const triggerDismiss = () => {
     setIsDismissing(true);
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("nimza_splash_seen", "true");
-    }
     setTimeout(() => {
       setIsVisible(false);
       onComplete?.();
-    }, 400);
+    }, 450);
   };
 
   const handleSkip = () => {
@@ -61,12 +69,12 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
 
   if (!isVisible) return null;
 
-  // Formatted percentage string (e.g. 00%, 07%, 42%, 100%)
-  const percentageStr = String(Math.floor(progress)).padStart(2, "0") + "%";
+  // Exact percentage string (0%, 30%, 60%, 90%, 100%)
+  const percentageStr = `${progress}%`;
 
-  // Calculate blur from 18px down to 0px based on progress
-  const blurAmount = Math.max(0, 18 * (1 - progress / 85));
-  const logoOpacity = Math.min(1, Math.max(0, (progress - 15) / 65));
+  // Calculate blur from 16px down to 0px based on stepped progress
+  const blurAmount = Math.max(0, 16 * (1 - progress / 100));
+  const logoOpacity = Math.min(1, Math.max(0.2, progress / 90));
 
   return (
     <AnimatePresence>
@@ -74,8 +82,8 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
         <motion.div
           key="splash-overlay"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.03 }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#1F241F] text-ivory select-none overflow-hidden"
         >
           {/* Subtle Ambient Radial Glow */}
@@ -87,14 +95,13 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
           {/* Skip Action (Top Right) */}
           <button
             onClick={handleSkip}
-            className="absolute top-6 right-6 sm:top-8 sm:right-8 text-[11px] font-sans uppercase tracking-[0.25em] text-sand/50 hover:text-gold transition-colors py-1.5 px-3 rounded-full border border-white/10 hover:border-gold/40 z-20"
+            className="absolute top-6 right-6 sm:top-8 sm:right-8 text-[11px] font-sans uppercase tracking-[0.25em] text-sand/50 hover:text-gold transition-colors py-1.5 px-3 rounded-full border border-white/10 hover:border-gold/40 z-20 cursor-pointer"
           >
             Skip ↗
           </button>
 
-          {/* Center Stage: 3D Loading + Morphing Shape + Logo Reveal */}
+          {/* Center Stage: 3D Cloche Halo + Morphing Shape + Logo Reveal */}
           <div className="relative flex flex-col items-center justify-center z-10 px-6 max-w-sm w-full text-center">
-            {/* 1. 3D OBJECT LOADING & 2. MORPHING ANIMATION CONTAINER */}
             <div className="relative mb-8 [perspective:1000px] flex items-center justify-center">
               {/* 3D Rotating Gold Cloche / Seal Halo */}
               <motion.div
@@ -127,7 +134,7 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
                 />
               </motion.div>
 
-              {/* 2. MORPHING SHAPE THAT TRANSFORMS INTO THE LOGO CONTAINER */}
+              {/* Morphing Shape that transforms into the Logo container */}
               <motion.div
                 animate={{
                   borderRadius: [
@@ -138,17 +145,18 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
                   ],
                 }}
                 transition={{
-                  duration: 3,
+                  duration: 2.2,
                   times: [0, 0.35, 0.7, 1],
                   ease: "easeInOut",
                 }}
                 className="absolute inset-4 overflow-hidden bg-transparent border-2 border-gold/50 shadow-[0_0_35px_rgba(185,154,91,0.25)] flex items-center justify-center p-3"
               >
-                {/* 1. LOGO REVEAL: GRADUALLY APPEARS WITH BLUR & OPACITY */}
-                <motion.div
+                {/* Logo Reveal: dynamically unblurs as progress steps */}
+                <div
                   style={{
                     filter: `blur(${blurAmount}px)`,
                     opacity: logoOpacity,
+                    transition: "filter 0.4s ease, opacity 0.4s ease",
                   }}
                   className="w-full h-full flex items-center justify-center bg-transparent"
                 >
@@ -157,15 +165,15 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
                     alt="Nimza Restaurant Logo"
                     className="w-full h-full object-contain bg-transparent drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
                   />
-                </motion.div>
+                </div>
               </motion.div>
             </div>
 
-            {/* Brand Title (Fades in softly) */}
+            {/* Brand Title */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: progress > 30 ? 1 : 0.2, y: 0 }}
-              transition={{ duration: 0.5 }}
+              animate={{ opacity: progress >= 30 ? 1 : 0.3, y: 0 }}
+              transition={{ duration: 0.4 }}
               className="mb-6"
             >
               <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-[0.15em] text-ivory">
@@ -176,21 +184,24 @@ export default function SplashScreen({ onComplete, forceShow = false }: SplashSc
               </p>
             </motion.div>
 
-            {/* 3. PERCENTAGE LOADER: 00% -> 100% */}
+            {/* Stepped Percentage Loader: 0% -> 30% -> 60% -> 90% -> 100% */}
             <div className="w-full max-w-xs space-y-3">
               <div className="flex items-center justify-between text-xs font-mono tracking-widest">
                 <span className="text-[10px] uppercase tracking-[0.25em] text-sand/60">
                   {progress < 100 ? "Loading Sanctuary" : "Welcome, Connoisseur"}
                 </span>
-                <span className="text-gold font-bold text-sm">{percentageStr}</span>
+                <span className="text-gold font-bold text-sm transition-all duration-300">
+                  {percentageStr}
+                </span>
               </div>
 
-              {/* Slender Gold Progress Bar */}
-              <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden p-0 relative shadow-inner">
+              {/* Slender Gold Progress Bar with stepped animation */}
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden p-0 relative shadow-inner">
                 <motion.div
                   className="h-full bg-gradient-to-r from-gold/60 via-gold to-[#F5DF9E] rounded-full shadow-[0_0_12px_rgba(185,154,91,0.8)]"
-                  style={{ width: `${progress}%` }}
-                  transition={{ ease: "easeOut" }}
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
                 />
               </div>
 

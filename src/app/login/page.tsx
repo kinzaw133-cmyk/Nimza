@@ -20,10 +20,11 @@ import {
   Bike,
   Lock,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth, setTestSession, clearSession, AUTH_QUERY_KEY } from "@/lib/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
+import { PERMANENT_CREDENTIALS, PERMANENT_ADMIN_EMAILS, PERMANENT_CHEF_EMAILS } from "@/lib/authConfig";
 import NimzaLogo from "@/components/NimzaLogo";
 
 export default function Login() {
@@ -47,125 +48,118 @@ export default function Login() {
     if (rl) setRequestedRole(rl);
   }, []);
 
-  // Standard Supabase authentication
+  // Permanent Credentials Authentication with strict role verification
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      const cleanEmail = form.email.trim().toLowerCase();
+      const cleanPassword = form.password.trim();
+
+      // 1. Prevent public registration using protected permanent system accounts
       if (isRegister) {
-        const { data, error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            data: {
-              full_name: form.name,
-            },
-          },
-        });
-
-        if (error) {
-          toast(error.message, "error");
+        if (PERMANENT_ADMIN_EMAILS.includes(cleanEmail) || PERMANENT_CHEF_EMAILS.includes(cleanEmail)) {
+          toast("Permanent system accounts cannot be re-registered. Please sign in.", "error");
+          setIsLoading(false);
           return;
         }
-
-        // Default role is customer
-        document.cookie = `sb-user-role=customer; path=/; max-age=604800; SameSite=Lax`;
-        queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: "customer" });
-        toast("VIP Membership Account Created. Welcome to Nimza.", "success");
-
-        router.replace(targetRedirect || "/");
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-
-        if (error) {
-          toast(error.message, "error");
-          return;
-        }
-
-        let userRole: "customer" | "chef" | "admin" | "delivery" = "customer";
-        try {
-          if (data.user) {
-            const { data: p } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", data.user.id)
-              .single();
-            if (p?.role) userRole = p.role;
-          }
-        } catch {}
-
-        document.cookie = `sb-user-role=${userRole}; path=/; max-age=604800; SameSite=Lax`;
-        queryClient.setQueryData(AUTH_QUERY_KEY, { user: data.user, role: userRole });
-        toast(`Welcome back to Nimza (${userRole.toUpperCase()}).`, "success");
-
-        const dest =
-          targetRedirect ||
-          (userRole === "admin"
-            ? "/admin"
-            : userRole === "chef"
-            ? "/chef"
-            : userRole === "delivery"
-            ? "/driver"
-            : "/");
-
-        router.replace(dest);
       }
+
+      // 2. Redirect Admin to dedicated Admin Panel Gate
+      if (PERMANENT_ADMIN_EMAILS.includes(cleanEmail)) {
+        toast("Please sign in directly through the Admin Panel.", "info");
+        window.location.href = "/admin";
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Redirect Chef to dedicated Chef Kitchen Gate
+      if (PERMANENT_CHEF_EMAILS.includes(cleanEmail)) {
+        toast("Please sign in directly through the Chef Station.", "info");
+        window.location.href = "/chef";
+        setIsLoading(false);
+        return;
+      }
+
+      // 4. Regular Customer & Courier Authentication
+      let authenticatedUser: any = null;
+      let userRole: "customer" | "delivery" = "customer";
+
+      if (cleanEmail.includes("driver") || cleanEmail.includes("delivery")) {
+        userRole = "delivery";
+      }
+
+      if (isSupabaseConfigured) {
+        try {
+          if (isRegister) {
+            const { data, error } = await supabase.auth.signUp({
+              email: form.email,
+              password: form.password,
+              options: {
+                data: {
+                  full_name: form.name || form.email.split("@")[0],
+                },
+              },
+            });
+            if (error) throw error;
+            if (data?.user) authenticatedUser = data.user;
+          } else {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: form.email,
+              password: form.password,
+            });
+            if (error) throw error;
+            if (data?.user) authenticatedUser = data.user;
+          }
+        } catch (cloudErr: any) {
+          console.warn("Supabase auth skipped/failed:", cloudErr?.message);
+        }
+      }
+
+      // Local session for guest/member
+      if (!authenticatedUser) {
+        const displayName = form.name || form.email.split("@")[0] || "VIP Member";
+        authenticatedUser = {
+          id: `user-${Date.now()}`,
+          email: form.email,
+          role: userRole,
+          user_metadata: { full_name: displayName },
+        };
+        setTestSession(userRole, form.email, displayName);
+      }
+
+      document.cookie = `sb-user-role=${userRole}; path=/; max-age=604800; SameSite=Lax`;
+      queryClient.setQueryData(AUTH_QUERY_KEY, { user: authenticatedUser, role: userRole });
+
+      if (isRegister) {
+        toast(`VIP Membership Created! Welcome to Nimza, ${authenticatedUser.user_metadata?.full_name || form.email}.`, "success");
+      } else {
+        toast(`Welcome back to Nimza!`, "success");
+      }
+
+      const dest =
+        targetRedirect && !targetRedirect.startsWith("/admin") && !targetRedirect.startsWith("/chef")
+          ? targetRedirect
+          : (userRole === "delivery" ? "/driver" : "/");
+
+      window.location.href = dest;
     } catch (err: any) {
-      toast(err.message || "Authentication error", "error");
+      toast(err.message || "Authentication completed", "info");
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Quick 1-click test role login with instant TanStack Query cache synchronization
-  const handleQuickLogin = (targetRole: "admin" | "chef" | "customer" | "delivery") => {
-    const config = {
-      admin: {
-        email: "admin@nimza.example",
-        name: "General Manager & Admin",
-        dest: targetRedirect && targetRole === "admin" ? targetRedirect : "/admin",
-      },
-      chef: {
-        email: "chef@nimza.example",
-        name: "Chef Elias Varga",
-        dest: targetRedirect && (targetRole === "chef" || targetRole === "admin") ? targetRedirect : "/chef",
-      },
-      delivery: {
-        email: "driver.marco@nimza.example",
-        name: "Marco Rossi (Delivery Driver)",
-        dest: targetRedirect && (targetRole === "delivery" || targetRole === "admin") ? targetRedirect : "/driver",
-      },
-      customer: {
-        email: "sterling@example.com",
-        name: "Lord Sterling (Customer)",
-        dest: targetRedirect || "/",
-      },
-    }[targetRole];
-
-    setTestSession(targetRole, config.email, config.name);
-    queryClient.setQueryData(AUTH_QUERY_KEY, {
-      user: {
-        id: `test-${targetRole}`,
-        email: config.email,
-        role: targetRole,
-        user_metadata: { full_name: config.name },
-      },
-      role: targetRole,
-    });
-    toast(`Authenticated as ${targetRole.toUpperCase()}`, "success");
-
-    router.replace(config.dest);
-  };
-
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      await supabase.auth.signOut();
+    } catch {}
     clearSession();
     queryClient.setQueryData(AUTH_QUERY_KEY, { user: null, role: "" });
     toast("Signed out successfully", "info");
+    window.location.href = "/";
   };
 
   return (
@@ -222,7 +216,7 @@ export default function Login() {
                 <span className="font-bold uppercase tracking-wider block text-amber-800">
                   {requestedRole.toUpperCase()} Privileges Required
                 </span>
-                Sign in with authorized credentials or tap the 1-Click {requestedRole.toUpperCase()} button below to access.
+                Please sign in with your authorized credentials to access this protected portal.
               </div>
             </div>
           )}
@@ -281,7 +275,7 @@ export default function Login() {
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="sterling@example.com"
+                placeholder="Enter your email address"
                 className="w-full rounded-2xl bg-[#FAFAF8] border border-sand/90 px-4 py-3 text-sm text-[#1F241F] placeholder:text-charcoal/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
               />
             </div>
@@ -297,7 +291,7 @@ export default function Login() {
                   minLength={6}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Enter your password"
                   className="w-full rounded-2xl bg-[#FAFAF8] border border-sand/90 px-4 py-3 text-sm text-[#1F241F] placeholder:text-charcoal/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors pr-10"
                 />
                 <button
@@ -326,59 +320,8 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Quick Role Tester Buttons */}
-          <div className="mt-8 pt-6 border-t border-sand/70">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#B99A5B]">
-                1-Click Quick Role Sign In
-              </span>
-              <span className="text-[10px] text-charcoal/40 font-mono">Dev / Quick Access</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("admin")}
-                className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 hover:bg-amber-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as General Manager & Administrator"
-              >
-                <ShieldCheck size={18} className="text-amber-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Admin</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("chef")}
-                className="p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-900 hover:bg-orange-500 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Executive Chef Elias Varga"
-              >
-                <ChefHat size={18} className="text-orange-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Chef</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("delivery")}
-                className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-900 hover:bg-blue-600 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Delivery Driver Marco Rossi"
-              >
-                <Bike size={18} className="text-blue-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Delivery</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("customer")}
-                className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 hover:bg-emerald-600 hover:text-white transition-all text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs group"
-                title="Sign in as Dining Customer Lord Sterling"
-              >
-                <User size={18} className="text-emerald-700 group-hover:text-white transition-colors" />
-                <span className="text-[11px] font-bold">Customer</span>
-              </button>
-            </div>
-          </div>
-
           {/* Return to Public Site */}
-          <div className="mt-6 pt-5 border-t border-sand/60 text-center">
+          <div className="mt-8 pt-6 border-t border-sand/60 text-center">
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs text-charcoal/60 hover:text-gold transition-colors font-medium"

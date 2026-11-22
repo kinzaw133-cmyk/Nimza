@@ -84,9 +84,11 @@ export default function ScrollNavigator() {
     setMounted(true);
   }, []);
 
-  // Track scroll position & update active section + vertical progress rail
+  // Track scroll position & update active section + vertical progress rail with rAF throttling
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    let ticking = false;
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -115,10 +117,20 @@ export default function ScrollNavigator() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Smooth animated scroll to section

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,18 +18,37 @@ import {
   Edit3,
   X,
   Search,
+  Navigation,
+  Compass,
+  ExternalLink,
+  RotateCcw,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import {
   BranchLocation,
   getStoredBranches,
   saveStoredBranches,
+  resetToDefaultBranches,
 } from "@/lib/branches/branchData";
 import { toast } from "@/lib/notify";
+import RealtimeGoogleMap from "@/components/RealtimeGoogleMap";
+
+const LOCATION_PRESETS = [
+  { name: "Downtown Milan (Flagship)", lat: 45.4642, lng: 9.1900 },
+  { name: "Waterfront Harbour", lat: 45.4780, lng: 9.2150 },
+  { name: "Historic Old Town", lat: 45.4510, lng: 9.1780 },
+  { name: "Amalfi Coast Riviera", lat: 40.6281, lng: 14.4850 },
+  { name: "Alpine Highlands", lat: 46.4983, lng: 9.8392 },
+  { name: "Fashion District", lat: 45.4691, lng: 9.1953 },
+];
 
 export default function AdminBranchesPage() {
   const [branches, setBranches] = useState<BranchLocation[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedMapBranchId, setSelectedMapBranchId] = useState<string>("");
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
   // New branch form state
   const [name, setName] = useState("");
@@ -38,13 +57,24 @@ export default function AdminBranchesPage() {
   const [cityDistrict, setCityDistrict] = useState("");
   const [phone, setPhone] = useState("");
   const [headChef, setHeadChef] = useState("");
+  const [lat, setLat] = useState<number>(45.4642);
+  const [lng, setLng] = useState<number>(9.1900);
   const [tableCount, setTableCount] = useState(16);
   const [seatingCapacity, setSeatingCapacity] = useState(64);
   const [operatingHours, setOperatingHours] = useState("12:00 PM – 11:30 PM Daily");
 
   useEffect(() => {
-    setBranches(getStoredBranches());
-    const handleUpdate = () => setBranches(getStoredBranches());
+    const loaded = getStoredBranches();
+    setBranches(loaded);
+    if (loaded.length > 0 && !selectedMapBranchId) {
+      setSelectedMapBranchId(loaded[0].id);
+    }
+
+    const handleUpdate = () => {
+      const updated = getStoredBranches();
+      setBranches(updated);
+    };
+
     window.addEventListener("nimza_branches_updated", handleUpdate);
     return () => window.removeEventListener("nimza_branches_updated", handleUpdate);
   }, []);
@@ -63,7 +93,26 @@ export default function AdminBranchesPage() {
       const updated = branches.filter((b) => b.id !== branchId);
       setBranches(updated);
       saveStoredBranches(updated);
+      if (selectedMapBranchId === branchId && updated.length > 0) {
+        setSelectedMapBranchId(updated[0].id);
+      }
       toast(`Removed branch "${branchName}"`, "success");
+    }
+  };
+
+  const handleResetDefaults = () => {
+    if (confirm("Restore all 6 official gastronomy branches with verified Google Maps coordinates?")) {
+      const defaults = resetToDefaultBranches();
+      setBranches(defaults);
+      setSelectedMapBranchId(defaults[0].id);
+      toast("Restored 6 official gastronomy restaurant locations!", "success");
+    }
+  };
+
+  const handleFocusOnMap = (branchId: string) => {
+    setSelectedMapBranchId(branchId);
+    if (mapSectionRef.current) {
+      mapSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -90,13 +139,14 @@ export default function AdminBranchesPage() {
       status: "Open",
       image_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
       features: ["Private Dining Room", "Sommelier Service", "Valet Parking"],
-      coordinates: { lat: 45.464, lng: 9.19 },
+      coordinates: { lat: Number(lat) || 45.4642, lng: Number(lng) || 9.1900 },
     };
 
     const updated = [...branches, newBranch];
     setBranches(updated);
     saveStoredBranches(updated);
-    toast(`Branch "${name}" added successfully!`, "success");
+    setSelectedMapBranchId(newBranch.id);
+    toast(`Branch "${name}" added with realtime Google Map location!`, "success");
 
     // Reset & close
     setName("");
@@ -113,7 +163,7 @@ export default function AdminBranchesPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-sand">
         <div>
@@ -125,22 +175,55 @@ export default function AdminBranchesPage() {
             Branch &amp; Location Management
           </h1>
           <p className="text-xs sm:text-sm text-charcoal/60 mt-1">
-            Configure restaurant branches, operational statuses, table capacities, and brigade leadership.
+            Configure restaurant branches, operational statuses, table capacities, and live Google Maps positioning.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="btn !bg-gold hover:!bg-gold-light !text-charcoal !py-2.5 !px-5 text-xs font-bold uppercase tracking-wider rounded-full shadow-xs flex items-center gap-2 shrink-0"
-        >
-          <Plus size={15} />
-          <span>Add New Branch</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleResetDefaults}
+            className="px-4 py-2.5 rounded-full border border-sand bg-white text-xs font-bold text-charcoal/80 hover:text-gold hover:border-gold transition-all shadow-xs flex items-center gap-1.5"
+            title="Reset and restore all 6 default dummy locations"
+          >
+            <RotateCcw size={13} />
+            <span className="hidden sm:inline">Reset Defaults</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="btn !bg-gold hover:!bg-gold-light !text-charcoal !py-2.5 !px-5 text-xs font-bold uppercase tracking-wider rounded-full shadow-xs flex items-center gap-2 shrink-0"
+          >
+            <Plus size={15} />
+            <span>Add New Branch</span>
+          </button>
+        </div>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-sand">
+      {/* REALTIME GOOGLE MAP SECTION */}
+      <div ref={mapSectionRef} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-gold" />
+            <h2 className="font-serif text-lg font-bold text-[#1F241F]">
+              Realtime Google Maps Intelligence
+            </h2>
+          </div>
+          <span className="text-[11px] text-charcoal/60 font-mono">
+            Direct Google Maps Embed • Zero External API Required
+          </span>
+        </div>
+
+        <RealtimeGoogleMap
+          branches={branches}
+          selectedBranchId={selectedMapBranchId}
+          onSelectBranch={(b) => setSelectedMapBranchId(b.id)}
+        />
+      </div>
+
+      {/* SEARCH BAR & COUNTER */}
+      <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-sand shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal/40" />
           <input
@@ -151,100 +234,142 @@ export default function AdminBranchesPage() {
             className="w-full pl-9 pr-4 py-2 rounded-full bg-sand/20 border border-sand text-xs text-charcoal placeholder-charcoal/40 outline-none focus:border-gold"
           />
         </div>
-        <span className="text-xs text-charcoal/50 font-mono">
+        <span className="text-xs text-charcoal/60 font-mono font-medium">
           {filtered.length} locations operational
         </span>
       </div>
 
       {/* BRANCHES GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((branch) => (
-          <div
-            key={branch.id}
-            className="p-6 rounded-3xl bg-white border-2 border-sand hover:border-gold/60 transition-all flex flex-col justify-between shadow-xs"
-          >
-            <div>
-              <div className="relative h-44 rounded-2xl overflow-hidden mb-4 bg-sand/20">
-                <img
-                  src={branch.image_url}
-                  alt={branch.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#1F241F]/80 text-gold border border-gold/40 backdrop-blur-xs">
-                  {branch.cityDistrict}
+        {filtered.map((branch) => {
+          const isMapSelected = branch.id === selectedMapBranchId;
+          const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${branch.coordinates.lat},${branch.coordinates.lng}`;
+
+          return (
+            <div
+              key={branch.id}
+              className={`p-6 rounded-3xl bg-white border-2 transition-all flex flex-col justify-between shadow-xs ${
+                isMapSelected
+                  ? "border-gold ring-2 ring-gold/20 shadow-md"
+                  : "border-sand hover:border-gold/60"
+              }`}
+            >
+              <div>
+                <div className="relative h-44 rounded-2xl overflow-hidden mb-4 bg-sand/20">
+                  <img
+                    src={branch.image_url}
+                    alt={branch.name}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#1F241F]/80 text-gold border border-gold/40 backdrop-blur-xs">
+                    {branch.cityDistrict}
+                  </div>
+
+                  {/* Lat/Lng Coordinate Badge */}
+                  <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-black/70 text-white backdrop-blur-xs border border-white/20">
+                    {branch.coordinates.lat.toFixed(2)}°N, {branch.coordinates.lng.toFixed(2)}°E
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-serif text-xl font-bold text-[#1F241F]">{branch.name}</h3>
+                  <button
+                    type="button"
+                    onClick={() => handleFocusOnMap(branch.id)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 shrink-0 ${
+                      isMapSelected
+                        ? "bg-gold text-[#1F241F] font-extrabold shadow-xs"
+                        : "bg-sand/30 text-charcoal/70 hover:bg-sand/60 hover:text-[#1F241F]"
+                    }`}
+                    title="Focus on Realtime Google Map above"
+                  >
+                    <Navigation size={10} />
+                    <span>{isMapSelected ? "On Map" : "View Map"}</span>
+                  </button>
+                </div>
+
+                <p className="text-xs text-charcoal/60 mt-1 italic font-light">
+                  &ldquo;{branch.tagline}&rdquo;
+                </p>
+
+                <div className="space-y-2 text-xs text-charcoal/80 my-4 font-mono">
+                  <div className="flex items-center gap-2">
+                    <MapPin size={13} className="text-gold shrink-0" />
+                    <span className="truncate">{branch.address}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={13} className="text-gold shrink-0" />
+                    <span>{branch.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users size={13} className="text-gold shrink-0" />
+                    <span>{branch.tableCount} Tables ({branch.seatingCapacity} Seats)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ChefHat size={13} className="text-gold shrink-0" />
+                    <span className="truncate">{branch.headChef}</span>
+                  </div>
+                </div>
+
+                {/* Status Switcher Dropdown */}
+                <div className="pt-3 border-t border-sand">
+                  <label className="block text-[10px] uppercase font-bold text-charcoal/60 mb-1">
+                    Operational Status:
+                  </label>
+                  <select
+                    value={branch.status}
+                    onChange={(e) => handleStatusChange(branch.id, e.target.value as any)}
+                    className={`w-full px-3 py-1.5 rounded-xl border text-xs font-bold font-mono outline-none ${
+                      branch.status === "Open"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                        : branch.status === "Near Capacity"
+                        ? "bg-amber-50 text-amber-900 border-amber-300"
+                        : branch.status === "Private Buyout"
+                        ? "bg-purple-50 text-purple-900 border-purple-300"
+                        : "bg-rose-50 text-rose-800 border-rose-300"
+                    }`}
+                  >
+                    <option value="Open">Open for Service</option>
+                    <option value="Near Capacity">Near Capacity</option>
+                    <option value="Private Buyout">Private Gala Buyout</option>
+                    <option value="Closed">Closed for Prep</option>
+                  </select>
                 </div>
               </div>
 
-              <h3 className="font-serif text-xl font-bold text-[#1F241F]">{branch.name}</h3>
-              <p className="text-xs text-charcoal/60 mt-1 italic font-light">
-                &ldquo;{branch.tagline}&rdquo;
-              </p>
+              {/* Actions */}
+              <div className="pt-4 mt-4 border-t border-sand flex items-center justify-between text-xs font-medium">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/branches"
+                    className="font-bold text-olive hover:text-gold transition-colors underline"
+                  >
+                    Public Page →
+                  </Link>
+                  <a
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-0.5 text-charcoal/60 hover:text-gold transition-colors"
+                    title="Open Google Maps Directions in new tab"
+                  >
+                    <span>Directions</span>
+                    <ExternalLink size={10} />
+                  </a>
+                </div>
 
-              <div className="space-y-2 text-xs text-charcoal/80 my-4 font-mono">
-                <div className="flex items-center gap-2">
-                  <MapPin size={13} className="text-gold shrink-0" />
-                  <span className="truncate">{branch.address}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={13} className="text-gold shrink-0" />
-                  <span>{branch.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users size={13} className="text-gold shrink-0" />
-                  <span>{branch.tableCount} Tables ({branch.seatingCapacity} Seats)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ChefHat size={13} className="text-gold shrink-0" />
-                  <span className="truncate">{branch.headChef}</span>
-                </div>
-              </div>
-
-              {/* Status Switcher Dropdown */}
-              <div className="pt-3 border-t border-sand">
-                <label className="block text-[10px] uppercase font-bold text-charcoal/60 mb-1">
-                  Operational Status:
-                </label>
-                <select
-                  value={branch.status}
-                  onChange={(e) => handleStatusChange(branch.id, e.target.value as any)}
-                  className={`w-full px-3 py-1.5 rounded-xl border text-xs font-bold font-mono outline-none ${
-                    branch.status === "Open"
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                      : branch.status === "Near Capacity"
-                      ? "bg-amber-50 text-amber-900 border-amber-300"
-                      : branch.status === "Private Buyout"
-                      ? "bg-purple-50 text-purple-900 border-purple-300"
-                      : "bg-rose-50 text-rose-800 border-rose-300"
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(branch.id, branch.name)}
+                  className="p-2 rounded-lg hover:bg-rose-50 text-rose-600 hover:text-rose-700 transition-colors"
+                  title="Remove branch"
                 >
-                  <option value="Open">Open for Service</option>
-                  <option value="Near Capacity">Near Capacity</option>
-                  <option value="Private Buyout">Private Gala Buyout</option>
-                  <option value="Closed">Closed for Prep</option>
-                </select>
+                  <Trash2 size={15} />
+                </button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="pt-4 mt-4 border-t border-sand flex items-center justify-between">
-              <Link
-                href="/branches"
-                className="text-xs font-bold text-olive hover:text-gold transition-colors underline"
-              >
-                View Public Page →
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => handleDelete(branch.id, branch.name)}
-                className="p-2 rounded-lg hover:bg-rose-50 text-rose-600 hover:text-rose-700 transition-colors"
-                title="Remove branch"
-              >
-                <Trash2 size={15} />
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* CREATE MODAL */}
@@ -262,12 +387,15 @@ export default function AdminBranchesPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-gold shadow-2xl text-charcoal z-10"
+              className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-gold shadow-2xl text-charcoal z-10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between pb-4 border-b border-sand">
-                <h3 className="font-serif text-2xl font-bold text-[#1F241F]">
-                  Register Restaurant Branch
-                </h3>
+                <div className="flex items-center gap-2">
+                  <Building size={20} className="text-gold" />
+                  <h3 className="font-serif text-2xl font-bold text-[#1F241F]">
+                    Register Restaurant Branch
+                  </h3>
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -336,6 +464,67 @@ export default function AdminBranchesPage() {
                   />
                 </div>
 
+                {/* Realtime Google Maps Coordinates Inputs */}
+                <div className="p-3.5 rounded-2xl bg-sand/20 border border-sand space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-charcoal text-[11px] flex items-center gap-1.5">
+                      <MapPin size={13} className="text-gold" />
+                      <span>Google Maps Coordinates</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-charcoal/60">
+                      Realtime pinpoint positioning
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-charcoal/70 block mb-0.5">Latitude</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        required
+                        value={lat}
+                        onChange={(e) => setLat(Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-sand font-mono text-xs outline-none focus:border-gold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-charcoal/70 block mb-0.5">Longitude</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        required
+                        value={lng}
+                        onChange={(e) => setLng(Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-sand font-mono text-xs outline-none focus:border-gold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preset Locations Quick Buttons */}
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-charcoal/50 block mb-1">
+                      Quick Location Presets:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {LOCATION_PRESETS.map((p) => (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() => {
+                            setLat(p.lat);
+                            setLng(p.lng);
+                            if (!cityDistrict) setCityDistrict(p.name.split(" ")[0]);
+                          }}
+                          className="px-2 py-0.5 rounded-lg bg-white border border-sand/80 text-[10px] text-charcoal/70 hover:border-gold hover:text-gold transition-colors font-medium"
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="font-bold text-charcoal/80 block mb-1">Table Count</label>
@@ -364,7 +553,7 @@ export default function AdminBranchesPage() {
                     type="submit"
                     className="flex-1 py-3 rounded-full bg-gold hover:bg-gold-light text-[#1F241F] font-bold text-xs uppercase tracking-wider shadow-sm transition-all"
                   >
-                    Register Branch
+                    Register Branch with Map
                   </button>
                   <button
                     type="button"

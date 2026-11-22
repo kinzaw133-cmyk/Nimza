@@ -62,10 +62,26 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    let ticking = false;
+    let lastScrolled = window.scrollY > 40;
+    setScrolled(lastScrolled);
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const isPast = window.scrollY > 40;
+          if (isPast !== lastScrolled) {
+            lastScrolled = isPast;
+            setScrolled(isPast);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Close menus on route change

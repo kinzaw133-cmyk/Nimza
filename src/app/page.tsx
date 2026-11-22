@@ -24,12 +24,16 @@ import Img from "@/components/Img";
 import SplashScreen from "@/components/SplashScreen";
 import LogoShowcase from "@/components/LogoShowcase";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
-import ScrollNavigator from "@/components/ScrollNavigator";
+import dynamic from "next/dynamic";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useCart } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
 import { toast } from "@/lib/notify";
-import { preloadImages } from "@/lib/imageCache";
+import { preloadImages, getOptimizedImageUrl } from "@/lib/imageCache";
+
+const ScrollNavigator = dynamic(() => import("@/components/ScrollNavigator"), {
+  ssr: false,
+});
 
 // Fallback signature items if Supabase is initializing or empty
 const FALLBACK_SIGNATURES = [
@@ -123,11 +127,12 @@ export default function Home() {
 
   useEffect(() => {
     preloadImages(
-      [
-        ...FALLBACK_SIGNATURES.map((s) => s.image_url),
-        ...DEFAULT_GUEST_REVIEWS.map((r) => r.avatar_url),
-      ],
-      800
+      FALLBACK_SIGNATURES.map((s) => s.image_url),
+      500
+    );
+    preloadImages(
+      DEFAULT_GUEST_REVIEWS.map((r) => r.avatar_url),
+      96
     );
 
     const fetchFeatured = async () => {
@@ -220,14 +225,45 @@ export default function Home() {
           {/* Right Feathered Edge Fade Mask */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-24 sm:w-44 bg-gradient-to-l from-[#1F241F] via-[#1F241F]/90 to-transparent z-10" />
 
-          {/* Infinite Smooth Scrolling Track */}
+          {/* Infinite Smooth Scrolling Track (Dual-Track Continuous Loop) */}
           <div className="flex overflow-hidden">
-            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0">
-              {[...METRICS, ...METRICS].map((item, index) => {
+            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0 pr-10 sm:pr-14">
+              {METRICS.map((item, index) => {
                 const Icon = item.icon;
                 return (
                   <div
-                    key={`${item.label}-${index}`}
+                    key={`m1-${item.label}-${index}`}
+                    className="flex items-center gap-10 sm:gap-14 shrink-0 group cursor-default"
+                  >
+                    <div className="flex items-center gap-4 py-1.5 px-3 rounded-2xl transition-all duration-300 group-hover:bg-white/5">
+                      <div className="p-3 rounded-2xl bg-gold/15 border border-gold/30 text-gold shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:bg-gold/25 group-hover:border-gold shadow-xs">
+                        <Icon size={22} />
+                      </div>
+                      <div className="whitespace-nowrap">
+                        <p className="text-[10px] font-sans tracking-[0.25em] text-sand/70 uppercase font-semibold">
+                          {item.label}
+                        </p>
+                        <p className="font-serif text-lg md:text-xl font-bold text-ivory mt-0.5 group-hover:text-gold transition-colors">
+                          {item.value}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Luxury Separator Diamond */}
+                    <div className="text-gold/40 flex items-center justify-center select-none">
+                      <span className="text-sm font-serif">✦</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="animate-marquee flex items-center gap-10 sm:gap-14 shrink-0 pr-10 sm:pr-14" aria-hidden="true">
+              {METRICS.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={`m2-${item.label}-${index}`}
                     className="flex items-center gap-10 sm:gap-14 shrink-0 group cursor-default"
                   >
                     <div className="flex items-center gap-4 py-1.5 px-3 rounded-2xl transition-all duration-300 group-hover:bg-white/5">
@@ -468,7 +504,7 @@ export default function Home() {
           <div 
             className="absolute inset-0 pointer-events-none bg-cover bg-center opacity-30 mix-blend-multiply scale-105"
             style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1920&q=85')`,
+              backgroundImage: `url('${getOptimizedImageUrl("https://images.unsplash.com/photo-1546069901-ba9599a7e63c", 1200)}')`,
             }}
           />
           {/* Soft ambient lighting overlay for high legibility */}
@@ -529,8 +565,12 @@ export default function Home() {
                     {/* Guest identity footer */}
                     <div className="mt-6 pt-5 border-t border-sand/50 flex items-center gap-3.5">
                       <img
-                        src={t.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80"}
+                        src={getOptimizedImageUrl(t.avatar_url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330", 96)}
                         alt={t.author}
+                        loading="lazy"
+                        decoding="async"
+                        width={44}
+                        height={44}
                         className="w-11 h-11 rounded-full object-cover border border-white/90 shadow-xs shrink-0"
                       />
                       <div>

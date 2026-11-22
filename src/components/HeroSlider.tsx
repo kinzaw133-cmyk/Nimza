@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useCart } from "./Cart";
 import { toast } from "@/lib/notify";
-import { preloadImages } from "@/lib/imageCache";
+import { preloadImages, getOptimizedImageUrl } from "@/lib/imageCache";
 
 interface SlideData {
   id: string;
@@ -182,10 +182,22 @@ export default function HeroSlider() {
   const current = SLIDES[index];
   const activePrice = size === "medium" ? current.mediumPrice : current.largePrice;
 
-  // Preload all hero slide imagery into memory/cache on initial mount
+  // Priority load first slide, then idle-preload remaining slides without blocking LCP
   useEffect(() => {
-    const urls = SLIDES.flatMap((s) => [s.plateImg, s.coupon?.thumb].filter(Boolean) as string[]);
-    preloadImages(urls, 1000);
+    const firstPlate = SLIDES[0]?.plateImg;
+    if (firstPlate) {
+      const img = new Image();
+      img.src = getOptimizedImageUrl(firstPlate, 800);
+    }
+
+    const remainingUrls = SLIDES.slice(1).flatMap((s) => [s.plateImg, s.coupon?.thumb].filter(Boolean) as string[]);
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(() => preloadImages(remainingUrls, 800), { timeout: 3000 });
+      } else {
+        setTimeout(() => preloadImages(remainingUrls, 800), 1200);
+      }
+    }
   }, []);
 
   // Auto-slide every 5 seconds
@@ -450,8 +462,11 @@ export default function HeroSlider() {
                     {/* Inner Plate Ceramic Recess */}
                     <div className="relative h-full w-full rounded-full overflow-hidden shadow-inner border border-white/60">
                       <img
-                        src={current.plateImg}
+                        src={getOptimizedImageUrl(current.plateImg, 800)}
                         alt={current.title}
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
                         className="h-full w-full object-cover rounded-full filter contrast-[1.06] brightness-[1.02] transform transition-transform duration-700 hover:scale-105"
                       />
                       {/* Porcelain Light Glaze Reflection */}
@@ -496,8 +511,12 @@ export default function HeroSlider() {
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 shrink-0 rounded-xl overflow-hidden border border-sand/60">
                   <img
-                    src={current.coupon.thumb}
+                    src={getOptimizedImageUrl(current.coupon.thumb, 120)}
                     alt={current.coupon.title}
+                    loading="lazy"
+                    decoding="async"
+                    width={44}
+                    height={44}
                     className="h-full w-full object-cover"
                   />
                 </div>

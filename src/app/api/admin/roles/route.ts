@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabase } from "@/lib/supabase";
+import { isPermanentSystemEmail } from "@/lib/authConfig";
 
 export async function POST(request: NextRequest) {
   // Server-side check on the action: Only admins can perform role changes
@@ -29,6 +30,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Invalid role. Must be 'customer', 'chef', 'admin', or 'delivery'." },
         { status: 400 }
+      );
+    }
+
+    // Permanent system master accounts can NEVER have their role altered or demoted
+    if (
+      userId === "admin-master" ||
+      userId === "chef-master" ||
+      userId === "admin-01" ||
+      userId === "chef-01"
+    ) {
+      return NextResponse.json(
+        { error: "Access Denied: Permanent system master accounts cannot be altered." },
+        { status: 403 }
+      );
+    }
+
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (targetProfile?.email && isPermanentSystemEmail(targetProfile.email)) {
+      return NextResponse.json(
+        { error: "Access Denied: Permanent system master accounts cannot be altered." },
+        { status: 403 }
       );
     }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,6 +42,7 @@ import {
   Phone,
   Compass,
   Star,
+  Users,
 } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
@@ -49,7 +51,10 @@ import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
 import Img from "@/components/Img";
 import LiveDeliveryMap from "@/components/LiveDeliveryMap";
-import ReviewModal from "@/components/ReviewModal";
+
+const ReviewModal = dynamic(() => import("@/components/ReviewModal"), {
+  ssr: false,
+});
 import {
   getStoredDeliveryOrders,
   DeliveryOrder,
@@ -125,12 +130,178 @@ const STAGES = [
 
 const ITEMS_PER_PAGE = 5;
 
+const DEFAULT_SAMPLE_CUSTOMER_ORDERS = [
+  {
+    id: 1045,
+    user_id: "cust-01",
+    customer_name: "Lord Sterling",
+    created_at: new Date(Date.now() - 15 * 60000).toISOString(),
+    status: "Preparing",
+    total: 72.0,
+    table_no: 3,
+    payment_method: "Credit Card (Split 2 Persons)",
+    payment_status: "Paid",
+    notes: "Extra shaved black truffles on pasta; medium-rare on ribeye steak.",
+    order_items: [
+      {
+        id: 1,
+        quantity: 1,
+        customizations: "Extra Shaved Umbrian Truffles",
+        menu_items: {
+          id: 3,
+          name: "Truffle Tagliatelle",
+          price: 28.0,
+          image_url: "https://images.unsplash.com/photo-1621996346565-e3d5d6281788?w=500&q=80",
+          description: "Fresh hand-rolled pasta, 36-month Parmigiano-Reggiano, black truffle emulsion.",
+        },
+      },
+      {
+        id: 2,
+        quantity: 1,
+        customizations: "Cooked Medium-Rare with Herb Butter",
+        menu_items: {
+          id: 4,
+          name: "Heritage Dry-Aged Prime Ribeye",
+          price: 36.0,
+          image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80",
+          description: "45-day dry-aged beef, charred rosemary, roasted bone marrow jus.",
+        },
+      },
+      {
+        id: 3,
+        quantity: 1,
+        customizations: "Chilled with crushed ice & fresh mint",
+        menu_items: {
+          id: 9,
+          name: "Amalfi Sparkling Citrus Nectar",
+          price: 8.0,
+          image_url: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&q=80",
+          description: "Cold-pressed Sorrento lemon, wild blossom honey, effervescent spring water.",
+        },
+      },
+    ],
+  },
+  {
+    id: 1043,
+    user_id: "cust-01",
+    customer_name: "Sarah Jenkins",
+    created_at: new Date(Date.now() - 42 * 60000).toISOString(),
+    status: "Ready",
+    total: 58.5,
+    table_no: "Delivery Dispatch",
+    payment_method: "Cash on Delivery",
+    payment_status: "Pending",
+    notes: "Ring apartment buzzer #4B, leave in insulated bag if delay.",
+    order_items: [
+      {
+        id: 4,
+        quantity: 1,
+        customizations: "Pan-seared crispy skin, asparagus spears",
+        menu_items: {
+          id: 5,
+          name: "Wild Scottish Salmon Fillets",
+          price: 24.5,
+          image_url: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80",
+          description: "Pan-seared fillet, asparagus spears, saffron-infused velouté.",
+        },
+      },
+      {
+        id: 5,
+        quantity: 1,
+        customizations: "San Marzano tomatoes & fresh basil",
+        menu_items: {
+          id: 2,
+          name: "Artisanal Burrata Pugliese",
+          price: 18.0,
+          image_url: "https://images.unsplash.com/photo-1592417817098-8f3d6910985b?w=500&q=80",
+          description: "Creamy artisanal burrata, San Marzano confit, aged balsamic.",
+        },
+      },
+      {
+        id: 6,
+        quantity: 1,
+        customizations: "Warm caramel ganache pouring dome",
+        menu_items: {
+          id: 8,
+          name: "Valrhona Guanaja 70% Chocolate Sphere",
+          price: 16.0,
+          image_url: "https://images.unsplash.com/photo-1579372786545-d24232daf58c?w=500&q=80",
+          description: "Dark chocolate dome, hazelnut praline crunch, warm caramel sauce.",
+        },
+      },
+    ],
+  },
+  {
+    id: 1039,
+    user_id: "cust-01",
+    customer_name: "Countess Elena",
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    status: "Delivered",
+    total: 44.0,
+    table_no: 5,
+    payment_method: "Credit Card (Split 3 Persons)",
+    payment_status: "Paid",
+    notes: "Table anniversary celebration.",
+    order_items: [
+      {
+        id: 7,
+        quantity: 1,
+        customizations: "Cold-pressed olive oil & lemon",
+        menu_items: {
+          id: 1,
+          name: "Garden Harvest Bowl",
+          price: 14.0,
+          image_url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80",
+          description: "Tuscan kale, shaved radishes, avocado, cold-pressed olive oil.",
+        },
+      },
+      {
+        id: 8,
+        quantity: 1,
+        customizations: "Wood-fired artisanal thin crust",
+        menu_items: {
+          id: 6,
+          name: "Wood-Fired Margherita",
+          price: 16.0,
+          image_url: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500&q=80",
+          description: "San Marzano tomatoes, buffalo mozzarella, fresh sweet basil.",
+        },
+      },
+      {
+        id: 9,
+        quantity: 1,
+        customizations: "Espresso soak with cocoa dusting",
+        menu_items: {
+          id: 7,
+          name: "Tiramisu al Mascarpone",
+          price: 14.0,
+          image_url: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&q=80",
+          description: "Savoiardi soaked in espresso, mascarpone mousse, cocoa.",
+        },
+      },
+    ],
+  },
+];
+
+const getInitialCustomerOrders = () => {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("nimza_placed_orders");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+  }
+  return DEFAULT_SAMPLE_CUSTOMER_ORDERS;
+};
+
 export default function Orders() {
   const { user, loading: authLoading } = useAuth();
   const { add } = useCart();
   const router = useRouter();
 
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>(getInitialCustomerOrders);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -204,6 +375,13 @@ export default function Orders() {
       const mergedMap = new Map<number, any>();
       localOrders.forEach((o) => mergedMap.set(o.id, o));
       dbOrders.forEach((o) => mergedMap.set(o.id, o));
+
+      if (mergedMap.size === 0) {
+        DEFAULT_SAMPLE_CUSTOMER_ORDERS.forEach((o) => mergedMap.set(o.id, o));
+        try {
+          localStorage.setItem("nimza_placed_orders", JSON.stringify(DEFAULT_SAMPLE_CUSTOMER_ORDERS));
+        } catch {}
+      }
 
       const finalOrders = Array.from(mergedMap.values()).sort(
         (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
@@ -733,6 +911,14 @@ export default function Orders() {
                         <p className="text-xs text-charcoal/50 font-medium">
                           (Rs. {Math.round(Number(order.total || 0) * 280).toLocaleString()} PKR)
                         </p>
+                        {order.split_count && order.split_count > 1 && (
+                          <div className="mt-1.5 flex items-center justify-start sm:justify-end">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold/15 text-[#8C6D2D] border border-gold/40">
+                              <Users size={11} />
+                              <span>Split: {order.split_count} Diners (Rs. {order.split_per_person_pkr?.toLocaleString()} / each)</span>
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

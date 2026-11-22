@@ -72,16 +72,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, [items]);
 
-  const value: CartContextType = {
-    items,
-    add: storeAdd,
-    updateCustomization: storeUpdate,
-    chg: storeChg,
-    remove: storeRemove,
-    clear: storeClear,
-    count,
-    total,
-  };
+  const value = useMemo<CartContextType>(
+    () => ({
+      items,
+      add: storeAdd,
+      updateCustomization: storeUpdate,
+      chg: storeChg,
+      remove: storeRemove,
+      clear: storeClear,
+      count,
+      total,
+    }),
+    [items, storeAdd, storeUpdate, storeChg, storeRemove, storeClear, count, total]
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

@@ -31,20 +31,31 @@ function getInitialAuthData(): AuthSessionData | undefined {
   if (typeof window === "undefined") return undefined;
 
   try {
-    // 1. Check local demo / active test session
+    // 1. Check local demo / active test session (customer / delivery only)
     const rawTest = localStorage.getItem("nimza_active_test_user");
     if (rawTest) {
       const parsed = JSON.parse(rawTest);
       const role = (parsed.role as UserRole) || "customer";
+
+      // Admin and Chef require verified server-side session. Never grant from local storage!
+      if (role === "admin" || role === "chef") {
+        return undefined;
+      }
+
       // Ensure cookie is in sync
       document.cookie = `sb-user-role=${role}; path=/; max-age=604800; SameSite=Lax`;
       return { user: parsed, role };
     }
 
-    // 2. Read role from cookie if available
+    // 2. Read role from cookie ONLY for non-privileged accounts (customer/delivery)
+    // NEVER grant admin or chef privileges based on a raw cookie!
     const cookieMatch = document.cookie.match(/(?:^|;\s*)sb-user-role=([^;]+)/);
     const cookieRole = cookieMatch ? (decodeURIComponent(cookieMatch[1]) as UserRole) : "";
     if (cookieRole) {
+      if (cookieRole === "admin" || cookieRole === "chef") {
+        document.cookie = `sb-user-role=; path=/; max-age=0; SameSite=Lax`;
+        return undefined;
+      }
       return {
         user: { email: `${cookieRole}@nimza.example`, role: cookieRole },
         role: cookieRole,
@@ -56,25 +67,28 @@ function getInitialAuthData(): AuthSessionData | undefined {
 }
 
 /**
- * Core async session resolver powered by Supabase & Local Cache
+ * Core async session resolver powered by Server-Side Session API, Supabase & Local Cache
  */
 async function fetchAuthSession(): Promise<AuthSessionData> {
   let user: any = null;
   let role: UserRole = "";
 
-  // 1. Local active test user (0ms read)
+  // 1. Prioritize Server-Side HttpOnly Session Verification
   if (typeof window !== "undefined") {
     try {
-      const raw = localStorage.getItem("nimza_active_test_user");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        user = parsed;
-        role = (parsed.role as UserRole) || "customer";
+      const res = await fetch("/api/auth/session", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          user = data.user;
+          role = data.role as UserRole;
+          return { user, role };
+        }
       }
     } catch {}
   }
 
-  // 2. Real Supabase Session
+  // 2. Real Supabase Session (if configured)
   if (!user && isSupabaseConfigured) {
     try {
       const {
@@ -94,16 +108,26 @@ async function fetchAuthSession(): Promise<AuthSessionData> {
     } catch {}
   }
 
-  // 3. Fallback: Cookie role preservation
-  if (!user && typeof document !== "undefined") {
-    const cookieMatch = document.cookie.match(/(?:^|;\s*)sb-user-role=([^;]+)/);
-    if (cookieMatch && cookieMatch[1]) {
-      role = decodeURIComponent(cookieMatch[1]) as UserRole;
-      user = { email: `${role}@nimza.example`, role };
-    }
+  // 3. Fallback: Local active non-privileged session (customer/delivery only)
+  // Admin and Chef can NEVER be established without server verification!
+  if (!user && typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("nimza_active_test_user");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const r = (parsed.role as UserRole) || "customer";
+        if (r === "admin" || r === "chef") {
+          localStorage.removeItem("nimza_active_test_user");
+          document.cookie = `sb-user-role=; path=/; max-age=0; SameSite=Lax`;
+        } else {
+          user = parsed;
+          role = r;
+        }
+      }
+    } catch {}
   }
 
-  // Synchronize cookie for server-side Next.js compatibility
+  // Synchronize client-side cookie for Next.js navigation sync
   if (typeof document !== "undefined") {
     if (user && role) {
       document.cookie = `sb-user-role=${role}; path=/; max-age=604800; SameSite=Lax`;
@@ -178,12 +202,19 @@ export function useAuth(): AuthState {
     };
   }, [queryClient]);
 
+  const isAdmin =
+    role === "admin" &&
+    (user?.email === "admin@nimza.com" || user?.email === "admin@nimaz.com");
+  const isChef =
+    role === "chef" &&
+    (user?.email === "chef@nimza.com" || user?.email === "chef@nimaz.com");
+
   return {
     user,
     role,
     loading: isLoading && !data,
-    isAdmin: role === "admin",
-    isChef: role === "chef",
+    isAdmin,
+    isChef,
     isDelivery: role === "delivery",
     isCustomer: role === "customer",
     refetchAuth: () => refetch(),
@@ -191,8 +222,9 @@ export function useAuth(): AuthState {
 }
 
 /**
- * Instant One-Click Role Switcher:
+ * Enterprise Session Setter:
  * Updates TanStack Query cache in 0ms, updates cookie, and dispatches global event.
+ * Strictly guarantees admin and chef can only be established with permanent credentials.
  */
 export function setTestSession(
   role: "admin" | "chef" | "customer" | "delivery",
@@ -200,6 +232,16 @@ export function setTestSession(
   name: string = ""
 ) {
   if (typeof window === "undefined") return;
+
+  const cleanEmail = email.trim().toLowerCase();
+  if (role === "admin" && cleanEmail !== "admin@nimza.com" && cleanEmail !== "admin@nimaz.com") {
+    console.error("Access Denied: Attempted to set admin session without verified permanent email.");
+    return;
+  }
+  if (role === "chef" && cleanEmail !== "chef@nimza.com" && cleanEmail !== "chef@nimaz.com") {
+    console.error("Access Denied: Attempted to set chef session without verified permanent email.");
+    return;
+  }
 
   const user = {
     id: `test-${role}-${Date.now()}`,

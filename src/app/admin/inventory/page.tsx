@@ -39,7 +39,7 @@ import {
   X,
   Play,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast, confirmDel } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
@@ -286,6 +286,95 @@ const INITIAL_INVENTORY_ITEMS: InventoryItem[] = [
     last_restocked_at: new Date(Date.now() - 14 * 86400000).toISOString(),
     linked_dishes: [],
   },
+  {
+    id: 13,
+    name: "Imperial Ossetra Royal Caviar (50g)",
+    category: "Truffles & Delicacies",
+    quantity: 14,
+    unit: "units",
+    min_threshold: 6,
+    unit_cost: 85.0,
+    supplier: "Caviar House & Prunier (Garonne)",
+    storage_location: "Sub-Zero Chiller Vault Alpha",
+    last_restocked_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    linked_dishes: [
+      { menu_item_id: 3, menu_item_name: "Truffle Tagliatelle", quantity_required: 0.5, is_available: true },
+    ],
+  },
+  {
+    id: 14,
+    name: "Japanese Miyazaki A5 Wagyu Striploin",
+    category: "Meat & Seafood",
+    quantity: 16,
+    unit: "portions",
+    min_threshold: 8,
+    unit_cost: 42.0,
+    supplier: "Miyachiku Guild (Miyazaki, Japan)",
+    storage_location: "Sub-Zero Cryo Locker 02",
+    last_restocked_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    linked_dishes: [
+      { menu_item_id: 4, menu_item_name: "Grilled Ribeye Prime", quantity_required: 1, is_available: true },
+    ],
+  },
+  {
+    id: 15,
+    name: "Hand-Whipped Mascarpone di Carnia",
+    category: "Dairy & Cheese",
+    quantity: 12.5,
+    unit: "kg",
+    min_threshold: 4.0,
+    unit_cost: 14.0,
+    supplier: "Latteria di Ovaro (Carnic Alps)",
+    storage_location: "Dairy Chiller B",
+    last_restocked_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    linked_dishes: [
+      { menu_item_id: 7, menu_item_name: "Tiramisu al Mascarpone", quantity_required: 0.15, is_available: true },
+    ],
+  },
+  {
+    id: 16,
+    name: "Fresh Genovese Sweet Basil & Microgreens",
+    category: "Produce & Herbs",
+    quantity: 8.0,
+    unit: "bunches",
+    min_threshold: 3.0,
+    unit_cost: 3.2,
+    supplier: "Riviera Ligure Hydroponics",
+    storage_location: "Salad Station Crisper",
+    last_restocked_at: new Date().toISOString(),
+    linked_dishes: [
+      { menu_item_id: 6, menu_item_name: "Wood-Fired Margherita", quantity_required: 0.2, is_available: true },
+      { menu_item_id: 2, menu_item_name: "Burrata Pugliese", quantity_required: 0.1, is_available: true },
+    ],
+  },
+  {
+    id: 17,
+    name: "Iranian Super Negin Saffron Strands",
+    category: "Produce & Herbs",
+    quantity: 45,
+    unit: "g",
+    min_threshold: 20,
+    unit_cost: 9.5,
+    supplier: "Khorasan Royal Spice Guild",
+    storage_location: "Spice Vault Safe C",
+    last_restocked_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+    linked_dishes: [
+      { menu_item_id: 5, menu_item_name: "Pan-Seared Herb Salmon", quantity_required: 0.5, is_available: true },
+    ],
+  },
+  {
+    id: 18,
+    name: "Brunello di Montalcino Biondi-Santi 2015",
+    category: "Beverages & Cellar",
+    quantity: 12,
+    unit: "bottles",
+    min_threshold: 4,
+    unit_cost: 115.0,
+    supplier: "Tenuta Greppo (Montalcino)",
+    storage_location: "Sommelier Vault Bin 12",
+    last_restocked_at: new Date(Date.now() - 18 * 86400000).toISOString(),
+    linked_dishes: [],
+  },
 ];
 
 const INITIAL_TRANSACTIONS: InventoryTransaction[] = [
@@ -325,17 +414,92 @@ const INITIAL_TRANSACTIONS: InventoryTransaction[] = [
     created_by: "Sous Chef Marco",
     created_at: new Date(Date.now() - 12 * 3600000).toISOString(),
   },
+  {
+    id: 104,
+    inventory_item_id: 13,
+    item_name: "Imperial Ossetra Royal Caviar (50g)",
+    type: "Restock",
+    quantity_delta: 10,
+    previous_quantity: 4,
+    new_quantity: 14,
+    reason: "Restocked from Prunier Bordeaux reserve",
+    created_by: "Sommelier Marcus",
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: 105,
+    inventory_item_id: 14,
+    item_name: "Japanese Miyazaki A5 Wagyu Striploin",
+    type: "Order Consumption",
+    quantity_delta: -2,
+    previous_quantity: 18,
+    new_quantity: 16,
+    reason: "VIP Table 11 Chef's Counter Seating",
+    created_by: "KDS Auto-Deduction",
+    created_at: new Date(Date.now() - 18 * 3600000).toISOString(),
+  },
+  {
+    id: 106,
+    inventory_item_id: 17,
+    item_name: "Iranian Super Negin Saffron Strands",
+    type: "Manual Adjustment",
+    quantity_delta: 5,
+    previous_quantity: 40,
+    new_quantity: 45,
+    reason: "Monthly audited scale calibration adjustment",
+    created_by: "Executive Administrator",
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 107,
+    inventory_item_id: 18,
+    item_name: "Brunello di Montalcino Biondi-Santi 2015",
+    type: "Restock",
+    quantity_delta: 6,
+    previous_quantity: 6,
+    new_quantity: 12,
+    reason: "Cellar bin allocation from Tuscan private estate sale",
+    created_by: "Sommelier Marcus",
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
 ];
+
+// Helper to reliably load initial inventory with zero flash
+const getInitialInventory = (): InventoryItem[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("nimza_inventory_items");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+  }
+  return INITIAL_INVENTORY_ITEMS;
+};
+
+const getInitialTransactions = (): InventoryTransaction[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("nimza_inventory_transactions");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+  }
+  return INITIAL_TRANSACTIONS;
+};
 
 export default function AdminInventoryPage() {
   const { user, role, loading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
 
-  // Core Data States
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [transactions, setTransactions] = useState<InventoryTransaction[]>([]);
+  // Core Data States with instant fallback initialization
+  const [items, setItems] = useState<InventoryItem[]>(getInitialInventory);
+  const [transactions, setTransactions] = useState<InventoryTransaction[]>(getInitialTransactions);
   const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Filter & Search Controls
@@ -357,93 +521,107 @@ export default function AdminInventoryPage() {
   const [wasteQty, setWasteQty] = useState<string>("1");
   const [wasteReason, setWasteReason] = useState<string>("Expired / Spoilage");
 
-  // Load Inventory from Supabase (with fallback to curated catalog)
+  // Load Inventory from Supabase (with resilient fallback to curated Michelin catalog)
   const loadInventory = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // 1. Fetch live inventory items
-      const { data: dbItems, error: itemsErr } = await supabase
-        .from("inventory_items")
-        .select("*")
-        .order("name", { ascending: true });
-
-      // 2. Fetch recipe ingredient links
-      const { data: dbRecipes } = await supabase
-        .from("recipe_ingredients")
-        .select("*, menu_items(id, name, is_available)");
-
-      // 3. Fetch transactions
-      const { data: dbTx } = await supabase
-        .from("inventory_transactions")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      // 4. Fetch menu items for linking
-      const { data: dbMenu } = await supabase
-        .from("menu_items")
-        .select("id, name, is_available, price, category_id");
-      if (dbMenu) setMenuItems(dbMenu);
-
-      // Check local storage overrides
+      // 1. Read existing local overrides first
       let localItems: InventoryItem[] = [];
       let localTx: InventoryTransaction[] = [];
       try {
         const rawItems = localStorage.getItem("nimza_inventory_items");
-        if (rawItems) localItems = JSON.parse(rawItems);
+        if (rawItems) {
+          const parsed = JSON.parse(rawItems);
+          if (Array.isArray(parsed) && parsed.length > 0) localItems = parsed;
+        }
         const rawTx = localStorage.getItem("nimza_inventory_transactions");
-        if (rawTx) localTx = JSON.parse(rawTx);
+        if (rawTx) {
+          const parsed = JSON.parse(rawTx);
+          if (Array.isArray(parsed) && parsed.length > 0) localTx = parsed;
+        }
       } catch {}
 
-      let combinedItems: InventoryItem[] = [];
+      // 2. Query live Supabase only when configured
+      if (isSupabaseConfigured) {
+        try {
+          const { data: dbItems, error: itemsErr } = await supabase
+            .from("inventory_items")
+            .select("*")
+            .order("name", { ascending: true });
 
-      if (!itemsErr && Array.isArray(dbItems) && dbItems.length > 0) {
-        // Map database records
-        combinedItems = dbItems.map((row: any) => {
-          const links: RecipeLink[] = (dbRecipes || [])
-            .filter((r: any) => r.inventory_item_id === row.id)
-            .map((r: any) => ({
-              menu_item_id: r.menu_item_id,
-              menu_item_name: r.menu_items?.name || `Dish #${r.menu_item_id}`,
-              quantity_required: Number(r.quantity_required || 1),
-              is_available: r.menu_items?.is_available !== false,
-            }));
+          const { data: dbRecipes } = await supabase
+            .from("recipe_ingredients")
+            .select("*, menu_items(id, name, is_available)");
 
-          return {
-            id: row.id,
-            name: row.name,
-            category: row.category || "Pantry & Dry Goods",
-            quantity: Number(row.quantity || 0),
-            unit: row.unit || "units",
-            min_threshold: Number(row.min_threshold || 5),
-            unit_cost: Number(row.unit_cost || 0),
-            supplier: row.supplier,
-            storage_location: row.storage_location,
-            last_restocked_at: row.last_restocked_at,
-            created_at: row.created_at,
-            linked_dishes: links,
-          };
-        });
-      } else if (localItems.length > 0) {
-        combinedItems = localItems;
-      } else {
-        combinedItems = INITIAL_INVENTORY_ITEMS;
-        localStorage.setItem("nimza_inventory_items", JSON.stringify(INITIAL_INVENTORY_ITEMS));
+          const { data: dbTx } = await supabase
+            .from("inventory_transactions")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(100);
+
+          const { data: dbMenu } = await supabase
+            .from("menu_items")
+            .select("id, name, is_available, price, category_id");
+          if (dbMenu) setMenuItems(dbMenu);
+
+          if (!itemsErr && Array.isArray(dbItems) && dbItems.length > 0) {
+            const combinedItems = dbItems.map((row: any) => {
+              const links: RecipeLink[] = (dbRecipes || [])
+                .filter((r: any) => r.inventory_item_id === row.id)
+                .map((r: any) => ({
+                  menu_item_id: r.menu_item_id,
+                  menu_item_name: r.menu_items?.name || `Dish #${r.menu_item_id}`,
+                  quantity_required: Number(r.quantity_required || 1),
+                  is_available: r.menu_items?.is_available !== false,
+                }));
+
+              return {
+                id: row.id,
+                name: row.name,
+                category: row.category || "Pantry & Dry Goods",
+                quantity: Number(row.quantity || 0),
+                unit: row.unit || "units",
+                min_threshold: Number(row.min_threshold || 5),
+                unit_cost: Number(row.unit_cost || 0),
+                supplier: row.supplier,
+                storage_location: row.storage_location,
+                last_restocked_at: row.last_restocked_at,
+                created_at: row.created_at,
+                linked_dishes: links,
+              };
+            });
+
+            setItems(combinedItems);
+            if (dbTx && dbTx.length > 0) setTransactions(dbTx);
+            return;
+          }
+        } catch (supabaseErr) {
+          console.warn("Supabase query bypassed/failed, falling back to local stock:", supabaseErr);
+        }
       }
 
-      setItems(combinedItems);
+      // 3. Fallback to localStorage or curated Michelin seed stock
+      if (localItems.length > 0) {
+        setItems(localItems);
+      } else {
+        setItems(INITIAL_INVENTORY_ITEMS);
+        try {
+          localStorage.setItem("nimza_inventory_items", JSON.stringify(INITIAL_INVENTORY_ITEMS));
+        } catch {}
+      }
 
-      if (dbTx && dbTx.length > 0) {
-        setTransactions(dbTx);
-      } else if (localTx.length > 0) {
+      if (localTx.length > 0) {
         setTransactions(localTx);
       } else {
         setTransactions(INITIAL_TRANSACTIONS);
-        localStorage.setItem("nimza_inventory_transactions", JSON.stringify(INITIAL_TRANSACTIONS));
+        try {
+          localStorage.setItem("nimza_inventory_transactions", JSON.stringify(INITIAL_TRANSACTIONS));
+        } catch {}
       }
     } catch (err) {
       console.error("Error loading inventory:", err);
       setItems(INITIAL_INVENTORY_ITEMS);
+      setTransactions(INITIAL_TRANSACTIONS);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -453,6 +631,28 @@ export default function AdminInventoryPage() {
   useEffect(() => {
     loadInventory();
   }, [loadInventory]);
+
+  // Safety self-heal: If items ever becomes empty, immediately seed INITIAL_INVENTORY_ITEMS
+  useEffect(() => {
+    if (items.length === 0) {
+      setItems(INITIAL_INVENTORY_ITEMS);
+      try {
+        localStorage.setItem("nimza_inventory_items", JSON.stringify(INITIAL_INVENTORY_ITEMS));
+      } catch {}
+    }
+  }, [items]);
+
+  // One-click Reset / Restore Michelin Demo Stock
+  const handleRestoreDefaultInventory = () => {
+    setItems(INITIAL_INVENTORY_ITEMS);
+    setTransactions(INITIAL_TRANSACTIONS);
+    try {
+      localStorage.setItem("nimza_inventory_items", JSON.stringify(INITIAL_INVENTORY_ITEMS));
+      localStorage.setItem("nimza_inventory_transactions", JSON.stringify(INITIAL_TRANSACTIONS));
+      window.dispatchEvent(new CustomEvent("nimza_inventory_updated"));
+    } catch {}
+    toast("✨ Michelin demo inventory (18 items) and transaction audit ledger restored!", "success");
+  };
 
   // Persist items locally and broadcast update
   const persistItems = (newItems: InventoryItem[]) => {
@@ -921,6 +1121,17 @@ export default function AdminInventoryPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Seed Demo Stock Button */}
+          <button
+            type="button"
+            onClick={handleRestoreDefaultInventory}
+            className="rounded-full border border-gold/40 bg-sand/20 hover:bg-gold/15 text-charcoal px-3.5 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs"
+            title="Restore default Michelin inventory & stock records"
+          >
+            <RotateCcw size={12} className="text-gold" />
+            <span>Seed Demo Stock</span>
+          </button>
+
           {/* Run Consumption Audit */}
           <button
             type="button"
@@ -1189,17 +1400,26 @@ export default function AdminInventoryPage() {
               <p className="text-xs text-charcoal/60 mt-1 max-w-md mx-auto">
                 No items match your filter criteria. Try resetting your search or add a new ingredient.
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("All Categories");
-                  setStockStatusFilter("all");
-                }}
-                className="mt-4 px-4 py-2 rounded-full bg-sand/30 hover:bg-sand text-xs font-bold text-charcoal"
-              >
-                Reset Filters
-              </button>
+              <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("All Categories");
+                    setStockStatusFilter("all");
+                  }}
+                  className="px-4 py-2 rounded-full bg-sand/30 hover:bg-sand text-xs font-bold text-charcoal transition-all"
+                >
+                  Reset Filters
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRestoreDefaultInventory}
+                  className="px-5 py-2 rounded-full bg-gold hover:bg-gold-light text-[#1F241F] text-xs font-bold shadow-sm transition-all"
+                >
+                  ✨ Restore 18 Michelin Stock Items
+                </button>
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-[2.5rem] border border-sand shadow-sm overflow-hidden">

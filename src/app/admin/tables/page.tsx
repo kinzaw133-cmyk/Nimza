@@ -29,7 +29,7 @@ import {
   Check,
   QrCode,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo from "@/components/NimzaLogo";
@@ -170,49 +170,61 @@ export default function AdminTablesPage() {
   const loadData = async () => {
     setIsRefreshing(true);
 
-    // 1. Load Tables from localStorage or Supabase
+    // 1. Load Tables from localStorage or seed defaults
     try {
       const storedTables = localStorage.getItem("nimza_admin_tables");
       if (storedTables) {
-        setTables(JSON.parse(storedTables));
+        const parsed = JSON.parse(storedTables);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTables(parsed);
+        } else {
+          setTables(DEFAULT_ADMIN_TABLES);
+          localStorage.setItem("nimza_admin_tables", JSON.stringify(DEFAULT_ADMIN_TABLES));
+        }
+      } else {
+        localStorage.setItem("nimza_admin_tables", JSON.stringify(DEFAULT_ADMIN_TABLES));
       }
     } catch {}
 
     // 2. Load Reservations
     try {
-      let combinedRes: any[] = [];
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase
+          .from("reservations")
+          .select("*")
+          .order("reserved_at", { ascending: false });
 
-      // A. Fetch from backend API
+        if (!error && data && data.length > 0) {
+          setReservations(data as any);
+          return;
+        }
+      }
+
+      // Fallback: check backend API
       try {
         const apiRes = await fetch("/api/reservations");
         if (apiRes.ok) {
-          const { reservations } = await apiRes.json();
-          if (reservations && reservations.length > 0) {
-            combinedRes = reservations;
+          const { reservations: apiData } = await apiRes.json();
+          if (apiData && apiData.length > 0) {
+            setReservations(apiData);
+            return;
           }
         }
       } catch {}
 
-      // B. Fetch from Supabase
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("*")
-        .order("reserved_at", { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        const map = new Map<number, any>();
-        combinedRes.forEach((r) => map.set(r.id, r));
-        data.forEach((r: any) => map.set(r.id, r));
-        setReservations(Array.from(map.values()));
-      } else if (combinedRes.length > 0) {
-        setReservations(combinedRes);
-      } else {
-        const storedRes = localStorage.getItem("nimza-my-reservations");
-        if (storedRes) {
-          const parsed = JSON.parse(storedRes);
-          if (parsed.length > 0) setReservations(parsed);
+      const storedRes = localStorage.getItem("nimza-my-reservations");
+      if (storedRes) {
+        const parsed = JSON.parse(storedRes);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReservations(parsed);
+          return;
         }
       }
+
+      setReservations(DEFAULT_ADMIN_RESERVATIONS);
+      try {
+        localStorage.setItem("nimza-my-reservations", JSON.stringify(DEFAULT_ADMIN_RESERVATIONS));
+      } catch {}
     } catch {
       // Fallback stays
     } finally {

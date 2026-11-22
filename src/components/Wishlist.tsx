@@ -303,20 +303,32 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     toast("Favorites list cleared", "info");
   }, [user, writeLocalCache]);
 
+  const value = useMemo<WishlistContextType>(
+    () => ({
+      favorites,
+      favoriteIds,
+      count: favorites.length,
+      loading,
+      isFavorite,
+      toggleFavorite,
+      removeFavorite,
+      clearFavorites,
+      refreshFavorites: loadFavorites,
+    }),
+    [
+      favorites,
+      favoriteIds,
+      loading,
+      isFavorite,
+      toggleFavorite,
+      removeFavorite,
+      clearFavorites,
+      loadFavorites,
+    ]
+  );
+
   return (
-    <WishlistContext.Provider
-      value={{
-        favorites,
-        favoriteIds,
-        count: favorites.length,
-        loading,
-        isFavorite,
-        toggleFavorite,
-        removeFavorite,
-        clearFavorites,
-        refreshFavorites: loadFavorites,
-      }}
-    >
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );

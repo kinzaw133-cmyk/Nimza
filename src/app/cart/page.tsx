@@ -41,6 +41,7 @@ import { useCart, FoodCustomization } from "@/components/Cart";
 import { toast } from "@/lib/notify";
 import Img from "@/components/Img";
 import NimzaLogo from "@/components/NimzaLogo";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 const FoodCustomizationModal = dynamic(() => import("@/components/FoodCustomizationModal"), {
   ssr: false,
@@ -83,7 +84,8 @@ export default function Cart() {
   const [deliveryAddress, setDeliveryAddress] = useState("Penthouse 4B, 742 Evergreen Promenade");
   const [deliveryCity, setDeliveryCity] = useState("Embassy Gardens & Diplomatic Quarter");
   const [deliveryCustomerName, setDeliveryCustomerName] = useState("Lord Sterling");
-  const [customerPhone, setCustomerPhone] = useState("+1 (555) 892-4100");
+  const [deliveryCountryCode, setDeliveryCountryCode] = useState("+92");
+  const [customerPhone, setCustomerPhone] = useState("03001234567");
   const [deliveryNote, setDeliveryNote] = useState("");
 
   // Detect table from QR code scan or session
@@ -140,6 +142,31 @@ export default function Cart() {
   const finalTotal = Math.max(0, total - discountAmount);
   const totalPkr = Math.round(finalTotal * 280);
 
+  // Bill Splitting State (1, 2, 3, 4, 5, 6 diners)
+  const [splitCount, setSplitCount] = useState<number>(1);
+  const [payMyShareOnly, setPayMyShareOnly] = useState<boolean>(false);
+  const [copiedSplitToast, setCopiedSplitToast] = useState(false);
+
+  const isSplitActive = splitCount > 1;
+  const perPersonUsd = isSplitActive ? (finalTotal / splitCount).toFixed(2) : finalTotal.toFixed(2);
+  const perPersonPkr = isSplitActive ? Math.round(totalPkr / splitCount) : totalPkr;
+
+  const payableTotalUsd = isSplitActive && payMyShareOnly ? Number((finalTotal / splitCount).toFixed(2)) : Number(finalTotal.toFixed(2));
+  const payableTotalPkr = isSplitActive && payMyShareOnly ? Math.round(totalPkr / splitCount) : totalPkr;
+
+  const handleCopySplitDetails = () => {
+    const tableText = orderType === "dine_in" ? `Table #${tableNumber}` : "Nimza Dining Order";
+    const text = `🍽️ Nimza Gastronomy — Bill Split Breakdown\n📍 Service: ${tableText}\n💵 Total Bill: Rs. ${totalPkr.toLocaleString()} ($${finalTotal.toFixed(2)} USD)\n👥 Diners Sharing: ${splitCount} people\n👉 Each Person's Share: Rs. ${perPersonPkr.toLocaleString()} ($${perPersonUsd} USD)\nPayment Portal: ${typeof window !== "undefined" ? window.location.origin : ""}/cart?table=${tableNumber}`;
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedSplitToast(true);
+      toast(`Copied bill split breakdown for ${splitCount} diners to clipboard!`, "success");
+      setTimeout(() => setCopiedSplitToast(false), 2500);
+    } catch {
+      toast(`Each person pays Rs. ${perPersonPkr.toLocaleString()}`, "info");
+    }
+  };
+
   // Edit Customization Modal State
   const [editingCartItem, setEditingCartItem] = useState<any | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -184,6 +211,10 @@ export default function Cart() {
     method: string;
     status: string;
     pointsEarned?: number;
+    splitCount?: number;
+    perPersonPkr?: number;
+    perPersonUsd?: string;
+    paidShareOnly?: boolean;
   } | null>(null);
 
   const isCard = selectedPayment === "card";
@@ -219,8 +250,15 @@ export default function Cart() {
         ? "Pay on Delivery"
         : "Pay at Table";
 
+      const splitNoteStr = isSplitActive
+        ? `[Split: ${splitCount} Diners, Rs. ${perPersonPkr.toLocaleString()} ($${perPersonUsd})/person${payMyShareOnly ? " — Paid 1 Share" : ""}]`
+        : "";
+      const combinedNotes = deliveryNote
+        ? `${deliveryNote} ${splitNoteStr}`
+        : splitNoteStr;
+
       const orderPayload: any = {
-        total: Number(finalTotal.toFixed(2)),
+        total: Number(payableTotalUsd.toFixed(2)),
         status: "Pending", // Kitchen queue initial stage
         payment_method: paymentMethodTitle,
         payment_status: paymentStatusValue,
@@ -228,7 +266,7 @@ export default function Cart() {
         order_type: orderType,
         delivery_address: orderType === "delivery" ? deliveryAddress : null,
         delivery_phone: orderType === "delivery" ? customerPhone : null,
-        notes: deliveryNote,
+        notes: combinedNotes,
       };
 
       if (user?.id) {
@@ -275,7 +313,13 @@ export default function Cart() {
         delivery_phone: orderType === "delivery" ? customerPhone : null,
         payment_method: paymentMethodTitle,
         payment_status: paymentStatusValue,
-        notes: deliveryNote,
+        notes: combinedNotes,
+        split_count: splitCount,
+        split_per_person_pkr: perPersonPkr,
+        split_per_person_usd: perPersonUsd,
+        paid_amount_pkr: payableTotalPkr,
+        paid_amount_usd: payableTotalUsd,
+        pay_mode: payMyShareOnly ? "single_share" : "full",
         order_items: items.map((x: any) => ({
           quantity: x.qty,
           customization: x.customization,
@@ -337,11 +381,15 @@ export default function Cart() {
       // 7. Provide clear, elegant feedback
       setSuccessData({
         orderId: generatedOrderId,
-        amountPkr: totalPkr,
-        amountUsd: finalTotal.toFixed(2),
+        amountPkr: payableTotalPkr,
+        amountUsd: payableTotalUsd.toFixed(2),
         method: paymentMethodTitle,
         status: paymentStatusValue,
         pointsEarned: pointsAwarded,
+        splitCount: splitCount,
+        perPersonPkr: perPersonPkr,
+        perPersonUsd: perPersonUsd,
+        paidShareOnly: isSplitActive && payMyShareOnly,
       });
 
       clear();
@@ -666,15 +714,13 @@ export default function Cart() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal/70 mb-1">
-                          Delivery Contact Phone
-                        </label>
-                        <input
-                          type="tel"
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          className="inp !text-xs font-semibold font-mono"
+                        <PhoneInputWithCountry
+                          countryCode={deliveryCountryCode}
+                          onCountryCodeChange={setDeliveryCountryCode}
+                          phoneNumber={customerPhone}
+                          onPhoneNumberChange={setCustomerPhone}
+                          label="Delivery Contact Phone"
+                          placeholder="03001234567"
                         />
                       </div>
                     </div>
@@ -809,19 +855,226 @@ export default function Cart() {
                   })}
                 </div>
 
+                {/* ========================================================= */}
+                {/* 2.5. BILL SPLITTING MODULE (1, 2, 3, 4, 5, 6 DINERS)     */}
+                {/* ========================================================= */}
+                <div className="pt-5 border-t border-sand/80 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-gold/15 text-[#8C6D2D] flex items-center justify-center">
+                        <Users size={15} />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#1F241F]">
+                          Split The Bill
+                        </h4>
+                        <p className="text-[10px] text-charcoal/60">
+                          Share dishes &amp; divide expense evenly
+                        </p>
+                      </div>
+                    </div>
+
+                    {isSplitActive && (
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gold/20 text-[#8C6D2D] border border-gold/40">
+                        {splitCount}x Diners Sharing
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 1, 2, 3, 4, 5, 6 People Quick Selection Chips */}
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-charcoal/70 mb-2">
+                      <span className="uppercase tracking-wider">How many people are sharing?</span>
+                      <span className="text-gold font-semibold">
+                        {splitCount === 1 ? "Full Bill (1 Person)" : `Split among ${splitCount} people`}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {[1, 2, 3, 4, 5, 6].map((num) => {
+                        const isSelected = splitCount === num;
+                        return (
+                          <button
+                            type="button"
+                            key={num}
+                            onClick={() => {
+                              setSplitCount(num);
+                              if (num === 1) setPayMyShareOnly(false);
+                            }}
+                            className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center border ${
+                              isSelected
+                                ? "bg-[#1F241F] text-gold border-[#1F241F] shadow-sm scale-105"
+                                : "bg-[#FAFAF8] border-sand/90 text-charcoal/80 hover:border-gold hover:bg-sand/30"
+                            }`}
+                          >
+                            <span className="text-sm font-serif font-bold leading-tight">{num}</span>
+                            <span className="text-[9px] uppercase tracking-tighter opacity-80 leading-none mt-0.5">
+                              {num === 1 ? "Solo" : `${num}p`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Optional Stepper for larger groups (up to 12) */}
+                  <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-sand/20 border border-sand/70 text-xs">
+                    <span className="text-charcoal/70 text-[11px] font-medium">
+                      Custom Group Counter:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={splitCount <= 1}
+                        onClick={() => {
+                          const next = Math.max(1, splitCount - 1);
+                          setSplitCount(next);
+                          if (next === 1) setPayMyShareOnly(false);
+                        }}
+                        className="grid h-6 w-6 place-items-center rounded-lg bg-white border border-sand text-charcoal hover:bg-gold disabled:opacity-30 transition-colors shadow-2xs"
+                      >
+                        <Minus size={11} />
+                      </button>
+                      <span className="w-16 text-center font-bold text-xs font-mono text-[#1F241F]">
+                        {splitCount} {splitCount === 1 ? "Person" : "Persons"}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={splitCount >= 12}
+                        onClick={() => setSplitCount(Math.min(12, splitCount + 1))}
+                        className="grid h-6 w-6 place-items-center rounded-lg bg-white border border-sand text-charcoal hover:bg-gold disabled:opacity-30 transition-colors shadow-2xs"
+                      >
+                        <Plus size={11} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Split Calculations Card (Shown when > 1 person) */}
+                  {isSplitActive && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="p-4 rounded-2xl bg-[#FAFAF8] border-2 border-gold/40 shadow-xs space-y-3.5"
+                    >
+                      <div className="flex items-center justify-between pb-2.5 border-b border-sand/70">
+                        <div>
+                          <span className="text-[10px] font-bold text-charcoal/60 uppercase tracking-widest block">
+                            Divided Amount Per Person
+                          </span>
+                          <span className="font-serif text-2xl font-bold text-[#1F241F]">
+                            Rs. {perPersonPkr.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-[#8C6D2D] bg-gold/15 px-2.5 py-1 rounded-full border border-gold/30">
+                            ${perPersonUsd} USD each
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Visual Companion List Breakdown */}
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        {Array.from({ length: splitCount }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-[11px] py-1.5 px-3 rounded-xl bg-white border border-sand/70 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-sand/40 text-[9px] font-bold flex items-center justify-center text-[#1F241F]">
+                                {idx + 1}
+                              </span>
+                              <span className="font-medium text-charcoal/85">
+                                {idx === 0 ? "You (Lead Diner)" : `Companion #${idx + 1}`}
+                              </span>
+                            </div>
+                            <span className="font-mono font-bold text-[#1F241F]">
+                              Rs. {perPersonPkr.toLocaleString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Share / Copy Details Button for WhatsApp */}
+                      <button
+                        type="button"
+                        onClick={handleCopySplitDetails}
+                        className="w-full py-2 px-3 rounded-xl bg-white border border-gold/50 hover:bg-gold/15 text-xs font-bold text-[#8C6D2D] flex items-center justify-center gap-2 transition-all shadow-2xs hover:shadow-xs"
+                      >
+                        {copiedSplitToast ? (
+                          <>
+                            <Check size={14} className="text-emerald-600 stroke-[2.5]" />
+                            <span className="text-emerald-700">Split Copied to Clipboard!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 size={13} />
+                            <span>Share Bill Split Breakdown via WhatsApp</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Pay All vs Pay 1 Share Toggle */}
+                      <div className="pt-2 border-t border-sand/60 flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold text-charcoal/70">
+                          Payment Option:
+                        </span>
+                        <div className="flex items-center gap-1 bg-sand/30 p-1 rounded-xl border border-sand">
+                          <button
+                            type="button"
+                            onClick={() => setPayMyShareOnly(false)}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                              !payMyShareOnly
+                                ? "bg-[#1F241F] text-gold shadow-xs"
+                                : "text-charcoal/60 hover:text-charcoal"
+                            }`}
+                          >
+                            Pay Table Total ({splitCount}x)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPayMyShareOnly(true)}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                              payMyShareOnly
+                                ? "bg-[#1F241F] text-gold shadow-xs"
+                                : "text-charcoal/60 hover:text-charcoal"
+                            }`}
+                          >
+                            Pay My Share Only (1x)
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+
                 {/* 3. Order Total (Matching Reference: "Order Total" + "Rs. 2,500") */}
                 <div className="pt-4 border-t border-sand space-y-1">
-                  <p className="text-xs font-semibold text-charcoal/60">
-                    Order Total
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-charcoal/60">
+                      {isSplitActive && payMyShareOnly ? "Your Share To Settle" : "Order Total"}
+                    </p>
+                    {isSplitActive && (
+                      <span className="text-[10px] font-mono text-[#8C6D2D] font-bold bg-gold/15 px-2 py-0.5 rounded-full border border-gold/30">
+                        {splitCount} Diners Sharing
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-baseline justify-between">
                     <p className="font-serif text-3xl font-extrabold text-[#1F241F]">
-                      Rs. {totalPkr.toLocaleString()}
+                      Rs. {payableTotalPkr.toLocaleString()}
                     </p>
                     <span className="text-xs text-charcoal/50 font-medium">
-                      (${finalTotal.toFixed(2)} USD)
+                      (${payableTotalUsd.toFixed(2)} USD)
                     </span>
                   </div>
+
+                  {isSplitActive && !payMyShareOnly && (
+                    <div className="text-[11px] text-[#8C6D2D] font-semibold pt-0.5 flex items-center justify-between">
+                      <span>Per-person share ({splitCount} people):</span>
+                      <span className="font-bold">Rs. {perPersonPkr.toLocaleString()} (${perPersonUsd})</span>
+                    </div>
+                  )}
 
                   {discountAmount > 0 && (
                     <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold pt-1">
@@ -832,7 +1085,7 @@ export default function Cart() {
 
                   <div className="flex items-center gap-1.5 text-[11px] text-amber-900 bg-amber-50/90 p-2.5 rounded-xl border border-amber-200 mt-2 font-medium">
                     <Crown size={14} className="text-gold shrink-0" />
-                    <span>You will earn <strong>+{Math.round(finalTotal)} VIP Loyalty Points</strong> on this order!</span>
+                    <span>You will earn <strong>+{Math.round(payableTotalUsd)} VIP Loyalty Points</strong> on this order!</span>
                   </div>
                 </div>
 
@@ -847,8 +1100,18 @@ export default function Cart() {
                       <RefreshCw size={17} className="animate-spin text-charcoal" />
                       <span>Processing Payment...</span>
                     </>
+                  ) : isCard ? (
+                    <span>
+                      {isSplitActive && payMyShareOnly
+                        ? `Pay My Share — Rs. ${payableTotalPkr.toLocaleString()}`
+                        : `Pay Now — Rs. ${payableTotalPkr.toLocaleString()}`}
+                    </span>
                   ) : (
-                    <span>{isCard ? "Pay Now" : "Place Order (Cash at Table)"}</span>
+                    <span>
+                      {isSplitActive && payMyShareOnly
+                        ? `Place Order (Cash My Share: Rs. ${payableTotalPkr.toLocaleString()})`
+                        : `Place Order (Cash at Table: Rs. ${payableTotalPkr.toLocaleString()})`}
+                    </span>
                   )}
                 </button>
 
@@ -908,9 +1171,24 @@ export default function Cart() {
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-sand pt-2 font-serif text-base text-[#1F241F]">
-                  <span>Amount:</span>
+                  <span>Amount Paid:</span>
                   <span className="font-bold">Rs. {successData.amountPkr.toLocaleString()} (${successData.amountUsd})</span>
                 </div>
+
+                {successData.splitCount && successData.splitCount > 1 && (
+                  <div className="p-3 rounded-2xl bg-gold/15 border border-gold/40 text-[11px] space-y-1 text-left">
+                    <div className="flex justify-between font-bold text-[#8C6D2D]">
+                      <span>Bill Split ({successData.splitCount} Diners):</span>
+                      <span>Rs. {successData.perPersonPkr?.toLocaleString()} / each</span>
+                    </div>
+                    <div className="text-[10px] text-charcoal/70 flex justify-between">
+                      <span>Settlement Mode:</span>
+                      <span className="font-semibold text-[#1F241F]">
+                        {successData.paidShareOnly ? "1 Individual Share Paid" : "Full Table Paid by You"}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2">

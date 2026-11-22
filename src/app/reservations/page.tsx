@@ -39,6 +39,7 @@ import { useAuth } from "@/lib/useAuth";
 import { toast } from "@/lib/notify";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
 import QRCodeSvg from "@/components/QRCodeSvg";
+import PhoneInputWithCountry from "@/components/PhoneInputWithCountry";
 
 // 12 Curated Dining Stations across 5 Signature Zones
 const RESTAURANT_TABLES = [
@@ -174,6 +175,79 @@ interface ReservationRecord {
   created_at?: string;
 }
 
+const DEFAULT_INITIAL_RESERVATIONS: ReservationRecord[] = [
+  {
+    id: 90214,
+    user_id: "cust-01",
+    name: "Lord Sterling",
+    phone: "+92 300 8472911",
+    email: "sterling@example.com",
+    table_no: 2,
+    guests: 2,
+    reserved_at: new Date(Date.now() + 4 * 3600000).toISOString(),
+    notes: "Window terrace table, celebratory champagne on ice upon arrival.",
+    package_type: "anniversary",
+    package_name: "Anniversary Romance Package",
+    package_price: 120,
+    status: "Confirmed",
+    booking_type: "table_reservation",
+    qr_code: "NIMZA-VIP-90214",
+    reminder_opt_in: true,
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 90215,
+    user_id: "cust-02",
+    name: "Countess Elena",
+    phone: "+92 321 9928174",
+    email: "elena@example.com",
+    table_no: 9,
+    guests: 6,
+    reserved_at: new Date(Date.now() + 28 * 3600000).toISOString(),
+    notes: "Private Wine Vault tasting, sommelier reserve pairing course.",
+    package_type: "wine_pairing",
+    package_name: "Sommelier Cellar Grand Cru",
+    package_price: 360,
+    status: "Confirmed",
+    booking_type: "event_booking",
+    qr_code: "NIMZA-VIP-90215",
+    reminder_opt_in: true,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: 90216,
+    user_id: "cust-03",
+    name: "Dr. Alistair Vance",
+    phone: "+92 333 4109283",
+    email: "alistair.vance@example.com",
+    table_no: 11,
+    guests: 4,
+    reserved_at: new Date(Date.now() + 52 * 3600000).toISOString(),
+    notes: "Chef's Counter VIP front-row seating facing hearth.",
+    package_type: "chef_tasting",
+    package_name: "Chef's Table Hearth Experience",
+    package_price: 280,
+    status: "Confirmed",
+    booking_type: "table_reservation",
+    qr_code: "NIMZA-VIP-90216",
+    reminder_opt_in: true,
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+];
+
+const getInitialReservations = (): ReservationRecord[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("nimza-my-reservations");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+  }
+  return DEFAULT_INITIAL_RESERVATIONS;
+};
+
 export default function ReservationsPage() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
@@ -193,6 +267,7 @@ export default function ReservationsPage() {
   } | null>(null);
 
   // Form State
+  const [countryCode, setCountryCode] = useState("+92");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -207,7 +282,7 @@ export default function ReservationsPage() {
     is_waitlist: false,
   });
 
-  const [bookings, setBookings] = useState<ReservationRecord[]>([]);
+  const [bookings, setBookings] = useState<ReservationRecord[]>(getInitialReservations);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Active Modals
@@ -338,9 +413,14 @@ export default function ReservationsPage() {
       }
     }
 
-    if (localList.length > 0) {
-      setBookings(localList);
+    if (localList.length === 0) {
+      localList = DEFAULT_INITIAL_RESERVATIONS;
+      try {
+        localStorage.setItem("nimza-my-reservations", JSON.stringify(DEFAULT_INITIAL_RESERVATIONS));
+      } catch {}
     }
+
+    setBookings(localList);
   };
 
   const selectedTable = RESTAURANT_TABLES.find((t) => t.no === form.table_no) || RESTAURANT_TABLES[2];
@@ -366,8 +446,8 @@ export default function ReservationsPage() {
       return;
     }
 
-    if (!/^[0-9+ ()-]{7,18}$/.test(form.phone.trim())) {
-      toast("Please provide a valid contact number (7-15 digits)", "error");
+    if (form.phone.trim().length !== 11) {
+      toast("Contact phone number must contain exactly 11 digits (e.g. 03001234567)", "error");
       return;
     }
 
@@ -859,19 +939,15 @@ export default function ReservationsPage() {
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal/70 mb-1.5">
-                              Contact Phone (SMS Reminders) *
-                            </label>
-                            <div className="relative">
-                              <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal/40" />
-                              <input
-                                required
-                                value={form.phone}
-                                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                                placeholder="+92 300 1234567"
-                                className="inp !pl-10 !text-sm"
-                              />
-                            </div>
+                            <PhoneInputWithCountry
+                              countryCode={countryCode}
+                              onCountryCodeChange={setCountryCode}
+                              phoneNumber={form.phone}
+                              onPhoneNumberChange={(val) => setForm({ ...form, phone: val })}
+                              label="Contact Phone (SMS Reminders)"
+                              placeholder="03001234567"
+                              required
+                            />
                           </div>
                         </div>
 

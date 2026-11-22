@@ -40,8 +40,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        serif: ["'Playfair Display'", "Georgia", "serif"],
-        sans: ["'DM Sans'", "system-ui", "-apple-system", "sans-serif"],
+        serif: ["var(--font-playfair)", "'Playfair Display'", "Georgia", "serif"],
+        sans: ["var(--font-dm-sans)", "'DM Sans'", "system-ui", "-apple-system", "sans-serif"],
       },
       animation: {
         "float-slow": "floatSlow 6s ease-in-out infinite",
