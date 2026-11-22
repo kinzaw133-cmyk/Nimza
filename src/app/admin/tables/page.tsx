@@ -200,6 +200,18 @@ export default function AdminTablesPage() {
         }
       }
 
+      // Fallback: check backend API
+      try {
+        const apiRes = await fetch("/api/reservations");
+        if (apiRes.ok) {
+          const { reservations: apiData } = await apiRes.json();
+          if (apiData && apiData.length > 0) {
+            setReservations(apiData);
+            return;
+          }
+        }
+      } catch {}
+
       const storedRes = localStorage.getItem("nimza-my-reservations");
       if (storedRes) {
         const parsed = JSON.parse(storedRes);

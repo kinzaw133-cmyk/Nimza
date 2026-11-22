@@ -338,13 +338,49 @@ export default function ReservationsPage() {
       }
     } catch {}
 
-    if (user?.id && isSupabaseConfigured) {
+    let savedPhone = "";
+    try {
+      const p = localStorage.getItem("nimza_saved_guest_profile");
+      if (p) savedPhone = JSON.parse(p)?.phone || "";
+    } catch {}
+
+    // Also fetch from backend server API
+    try {
+      const apiRes = await fetch("/api/reservations");
+      if (apiRes.ok) {
+        const { reservations } = await apiRes.json();
+        if (reservations && reservations.length > 0) {
+          reservations.forEach((r: any) => {
+            if (isAdmin || !user?.id || r.user_id === user.id || (savedPhone && r.phone === savedPhone)) {
+              if (!localList.some((x) => x.id === r.id)) {
+                localList.push(r);
+              }
+            }
+          });
+        }
+      }
+    } catch {}
+
+    if (isSupabaseConfigured) {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("reservations")
           .select("*")
-          .eq("user_id", user.id)
           .order("reserved_at", { ascending: false });
+
+        const isUuid = (val: any) =>
+          typeof val === "string" &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+        if (!isAdmin) {
+          if (user?.id && isUuid(user.id)) {
+            query = query.eq("user_id", user.id);
+          } else if (savedPhone) {
+            query = query.eq("phone", savedPhone);
+          }
+        }
+
+        const { data, error } = await query;
 
         if (!error && data && data.length > 0) {
           // Merge local & supabase
@@ -378,7 +414,9 @@ export default function ReservationsPage() {
           setBookings(merged);
           return;
         }
-      } catch {}
+      } catch (err) {
+        console.warn("Could not fetch remote reservations:", err);
+      }
     }
 
     if (localList.length === 0) {
@@ -464,7 +502,7 @@ export default function ReservationsPage() {
     // 2. Persist to Supabase if configured
     if (isSupabaseConfigured) {
       try {
-        await supabase.from("reservations").insert({
+        const { error: insertErr } = await supabase.from("reservations").insert({
           id: reservationId,
           user_id: user?.id || null,
           name: newBooking.name,
@@ -483,16 +521,27 @@ export default function ReservationsPage() {
           reminder_opt_in: newBooking.reminder_opt_in,
           waitlist_position: newBooking.waitlist_position,
         });
-      } catch {
-        // Local fallback
+        if (insertErr) {
+          console.error("Supabase reservation insert error:", insertErr.message);
+        }
+      } catch (err) {
+        console.warn("Reservation local fallback:", err);
       }
     }
 
-    // 3. Persist to localStorage
+    // 3. Persist to localStorage and backend API
     const updated = [newBooking, ...bookings];
     setBookings(updated);
     try {
       localStorage.setItem("nimza-my-reservations", JSON.stringify(updated));
+    } catch {}
+
+    try {
+      fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBooking),
+      }).catch(() => {});
     } catch {}
 
     window.dispatchEvent(new Event("nimza_reservation_updated"));
@@ -1044,14 +1093,23 @@ export default function ReservationsPage() {
                           />
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => setActiveStep("table")}
-                          className="btn w-full !py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-md"
-                        >
-                          <span>Proceed to Select Table #{form.table_no}</span>
-                          <ChevronRight size={16} />
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="btn flex-1 !py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-gold/20"
+                          >
+                            <CalendarCheck size={16} />
+                            <span>{isSubmitting ? "Securing Table..." : `Confirm Table #${form.table_no} Reservation`}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveStep("table")}
+                            className="btn-d !py-3.5 !px-5 text-xs font-bold flex items-center justify-center gap-1.5"
+                          >
+                            <span>Pick Floor Table / Package →</span>
+                          </button>
+                        </div>
                       </div>
                     )}
 
