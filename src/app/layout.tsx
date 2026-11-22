@@ -69,13 +69,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${playfair.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${dmSans.variable} ${playfair.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/png" href="/logo-circle.png" />
         <link rel="apple-touch-icon" href="/logo-circle.png" />
       </head>
-      <body className="bg-[#FAFAF8] text-[#1F241F] font-sans antialiased selection:bg-gold selection:text-[#1F241F]">
+      <body suppressHydrationWarning className="bg-[#FAFAF8] text-[#1F241F] font-sans antialiased selection:bg-gold selection:text-[#1F241F]">
         <QueryProvider>
           <CartProvider>
             <WishlistProvider>

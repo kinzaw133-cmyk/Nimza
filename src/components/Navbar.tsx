@@ -117,8 +117,8 @@ export default function Navbar() {
     window.location.href = "/";
   };
 
-  // Do not render on SSR before hydration or on dedicated admin panel & kitchen display (KDS) pages
-  if (!mounted || pathname?.startsWith("/admin") || pathname?.startsWith("/chef")) {
+  // Do not render public consumer navbar on dedicated admin panel & kitchen display (KDS) pages
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/chef")) {
     return null;
   }
 

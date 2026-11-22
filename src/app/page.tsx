@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import HeroSlider from "@/components/HeroSlider";
 import Img from "@/components/Img";
-import SplashScreen from "@/components/SplashScreen";
 import LogoShowcase from "@/components/LogoShowcase";
 import NimzaLogo, { BotanicalLeafSvg } from "@/components/NimzaLogo";
 import dynamic from "next/dynamic";
@@ -30,6 +29,10 @@ import { useCart } from "@/components/Cart";
 import { useWishlist } from "@/components/Wishlist";
 import { toast } from "@/lib/notify";
 import { preloadImages, getOptimizedImageUrl } from "@/lib/imageCache";
+
+const SplashScreen = dynamic(() => import("@/components/SplashScreen"), {
+  ssr: false,
+});
 
 const ScrollNavigator = dynamic(() => import("@/components/ScrollNavigator"), {
   ssr: false,

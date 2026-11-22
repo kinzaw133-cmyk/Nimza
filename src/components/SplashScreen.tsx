@@ -185,12 +185,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             </motion.div>
 
             {/* Stepped Percentage Loader: 0% -> 30% -> 60% -> 90% -> 100% */}
-            <div className="w-full max-w-xs space-y-3">
-              <div className="flex items-center justify-between text-xs font-mono tracking-widest">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-sand/60">
+            <div className="w-full max-w-xs space-y-3" suppressHydrationWarning>
+              <div className="flex items-center justify-between text-xs font-mono tracking-widest" suppressHydrationWarning>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-sand/60" suppressHydrationWarning>
                   {progress < 100 ? "Loading Sanctuary" : "Welcome, Connoisseur"}
                 </span>
-                <span className="text-gold font-bold text-sm transition-all duration-300">
+                <span className="text-gold font-bold text-sm transition-all duration-300" suppressHydrationWarning>
                   {percentageStr}
                 </span>
               </div>
